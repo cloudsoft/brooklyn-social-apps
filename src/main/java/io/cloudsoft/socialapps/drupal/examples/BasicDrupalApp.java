@@ -1,5 +1,13 @@
 package io.cloudsoft.socialapps.drupal.examples;
 
+import static java.util.Arrays.asList;
+import io.cloudsoft.socialapps.drupal.Drupal;
+
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
@@ -9,13 +17,6 @@ import brooklyn.location.basic.LocationRegistry;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.jclouds.JcloudsLocation;
 import brooklyn.util.MutableMap;
-import io.cloudsoft.socialapps.drupal.Drupal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-
-import static java.util.Arrays.asList;
 
 /**
  * This example Application starts up a single Ubuntu machine in Amazon EC2 that runs both Drupal and MySQL.

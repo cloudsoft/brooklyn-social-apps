@@ -1,23 +1,28 @@
 package io.cloudsoft.socialapps.drupal.examples;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.EntityFactory;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.webapp.DynamicWebAppCluster;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.location.basic.LocationRegistry;
-import brooklyn.util.MutableMap;
+import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import io.cloudsoft.socialapps.drupal.Drupal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
-import static java.util.Arrays.asList;
+import brooklyn.enricher.basic.SensorPropagatingEnricher;
+import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.BasicConfigurableEntityFactory;
+import brooklyn.entity.basic.ConfigurableEntityFactory;
+import brooklyn.entity.database.mysql.MySqlNode;
+import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import brooklyn.entity.webapp.WebAppService;
+import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.launcher.BrooklynServerDetails;
+import brooklyn.location.Location;
+import brooklyn.util.CommandLineUtil;
+import brooklyn.util.MutableMap;
 
 /**
  * This example Application starts up a Scalable drupal environment.
@@ -36,48 +41,36 @@ public class ClusteredDrupalApp extends AbstractApplication {
             "FLUSH PRIVILEGES;";
 
     private final MySqlNode mySqlNode;
-    private final DynamicWebAppCluster cluster;
-    private final NginxController loadBalancer;
+    private final ControlledDynamicWebAppCluster cluster;
 
     public ClusteredDrupalApp() {
         Map mysqlConf = MutableMap.of("creationScriptContents", SCRIPT);
         mySqlNode = new MySqlNode(mysqlConf, this);
 
-        Map clusterProps = MutableMap.of("factory", new DrupalFactory(), "initialSize", 1);
-        cluster = new DynamicWebAppCluster(clusterProps, this);
+        ConfigurableEntityFactory<Drupal> drupalFactory = new BasicConfigurableEntityFactory<Drupal>(Drupal.class);
+        drupalFactory.setConfig(Drupal.DATABASE_UP, attributeWhenReady(mySqlNode, MySqlNode.SERVICE_UP));
+        drupalFactory.setConfig(Drupal.DATABASE_HOST, attributeWhenReady(mySqlNode, MySqlNode.HOSTNAME));
+        drupalFactory.setConfig(Drupal.DATABASE_PORT, attributeWhenReady(mySqlNode, MySqlNode.MYSQL_PORT));
+        drupalFactory.setConfig(Drupal.DATABASE_SCHEMA, "drupal");
+        drupalFactory.setConfig(Drupal.DATABASE_USER, "drupal");
+        drupalFactory.setConfig(Drupal.DATABASE_PASSWORD, "password");
+        drupalFactory.setConfig(Drupal.ADMIN_EMAIL, "foo@bar.com");
 
-        Map nginxProperties = MutableMap.of("serverPool", cluster, "domain", "localhost", "port", "80");
-        loadBalancer = new NginxController(nginxProperties, this);
-    }
-
-    private class DrupalFactory implements EntityFactory {
-        @Override
-        public Entity newEntity(Map flags, Entity owner) {
-            Drupal drupal = new Drupal(cluster);
-            drupal.setConfig(Drupal.DATABASE_UP, attributeWhenReady(mySqlNode, MySqlNode.SERVICE_UP));
-            drupal.setConfig(Drupal.DATABASE_HOST, attributeWhenReady(mySqlNode, MySqlNode.HOSTNAME));
-            drupal.setConfig(Drupal.DATABASE_PORT, attributeWhenReady(mySqlNode, MySqlNode.MYSQL_PORT));
-            drupal.setConfig(Drupal.DATABASE_SCHEMA, "drupal");
-            drupal.setConfig(Drupal.DATABASE_USER, "drupal");
-            drupal.setConfig(Drupal.DATABASE_PASSWORD, "password");
-            drupal.setConfig(Drupal.ADMIN_EMAIL, "foo@bar.com");
-            return drupal;
-        }
+        Map clusterProps = MutableMap.of("factory", drupalFactory, "initialSize", 2);
+        cluster = new ControlledDynamicWebAppCluster(clusterProps, this);
+        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(this);
     }
 
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] argv) throws Exception {
         ClusteredDrupalApp app = new ClusteredDrupalApp();
-        BrooklynLauncher.manage(app, 8081);
+        List<String> args = new ArrayList<String>(Arrays.asList(argv));
+        BrooklynServerDetails server = BrooklynLauncher.newLauncher().
+                webconsolePort( CommandLineUtil.getCommandLineOption(args, "--port", "8081+") ).
+                managing(app).
+                launch();
 
-        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-        //brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-name-regex","ubuntu-oneiric");
-        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", "Debian");
-        brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
-        LocationRegistry locationRegistry = new LocationRegistry(brooklynProperties);
-
-        log.info("Starting BasicDrupalApp");
-        app.start(asList(locationRegistry.resolve("cloudservers-uk")));
-        log.info("Finished creating BasicDrupalApp");
+        List<Location> locations = server.getManagementContext().getLocationRegistry().resolve(!args.isEmpty() ? args : Arrays.asList("aws-ec2:us-east-1"));
+        app.start(locations);
     }
 }

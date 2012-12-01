@@ -3,12 +3,14 @@ package io.cloudsoft.socialapps.drupal;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import groovy.time.TimeDuration;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -83,6 +85,14 @@ public class Drupal extends SoftwareProcessEntity {
         return DrupalDriver.class;
     }
 
+    @Override
+    protected Collection<Integer> getRequiredOpenPorts() {
+        Collection<Integer> ports = super.getRequiredOpenPorts();
+        ports.add(80);
+        ports.add(443);
+        return ports;
+    }
+    
     @Override
     protected void connectSensors() {
         super.connectSensors();

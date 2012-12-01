@@ -1,18 +1,21 @@
 package io.cloudsoft.socialapps.drupal;
 
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
+import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
+import static brooklyn.entity.basic.lifecycle.CommonCommands.sudo;
+import static com.google.common.collect.ImmutableMap.of;
+import static java.lang.String.format;
 
 import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
-import static com.google.common.collect.ImmutableMap.of;
-import static java.lang.String.format;
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.lifecycle.CommonCommands;
+import brooklyn.entity.webapp.WebAppService;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
 
 public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements DrupalDriver {
 
@@ -37,19 +40,19 @@ public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements
         commands.add(installPackage(of("yum", "php-mysql", "apt", "php5-mysql"), null));
         commands.add(installPackage(of("yum", "php-gd", "apt", "php5-gd"), null));
         commands.add(installPackage(of("apt", "libapache2-mod-php5"), null));
-        commands.add("/etc/init.d/apache2 stop");
+        commands.add(sudo("/etc/init.d/apache2 stop"));
         commands.add(format("wget http://ftp.drupal.org/files/projects/drupal-%s.tar.gz", version));
         commands.add(format("tar -xvf drupal-%s.tar.gz", version));
-        commands.add(format("cp -R drupal-%s/*  /var/www/", version));
+        commands.add(sudo(format("cp -R drupal-%s/*  /var/www/", version)));
         commands.add("cd /var/www");
-        commands.add("cp sites/default/default.settings.php sites/default/settings.php");
-        commands.add("mkdir -p /var/www/sites/default/files");
-        commands.add("chmod o+w sites/default/settings.php");
-        commands.add("chmod o+w sites/default");
-        commands.add("chown -R www-data.www-data /var/www");
-        commands.add("chgrp -R www-data /var/www/sites/default/files");
-        commands.add("chmod -R g+u /var/www/sites/default/files");
-        commands.add("rm index.html");
+        commands.add(sudo("cp sites/default/default.settings.php sites/default/settings.php"));
+        commands.add(sudo("mkdir -p /var/www/sites/default/files"));
+        commands.add(sudo("chmod o+w sites/default/settings.php"));
+        commands.add(sudo("chmod o+w sites/default"));
+        commands.add(sudo("chown -R www-data.www-data /var/www"));
+        commands.add(sudo("chgrp -R www-data /var/www/sites/default/files"));
+        commands.add(sudo("chmod -R g+u /var/www/sites/default/files"));
+        commands.add(sudo("rm index.html"));
 
         newScript(INSTALLING).
                 failOnNonZeroResultCode().
@@ -71,12 +74,13 @@ public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements
         setupDrupalScript = setupDrupalScript.replaceAll("\\$database_host", entity.getConfig(Drupal.DATABASE_HOST));
         setupDrupalScript = setupDrupalScript.replaceAll("\\$database_driver", entity.getConfig(Drupal.DATABASE_DRIVER));
 
-        getLocation().copyTo(new ByteArrayInputStream(setupDrupalScript.getBytes()), "/var/www/setup-drupal.php");
+        getLocation().copyTo(new ByteArrayInputStream(setupDrupalScript.getBytes()), "/tmp/setup-drupal.php");
 
         List<String> commands = new LinkedList<String>();
         commands.add("cd /var/www");
-        commands.add("php setup-drupal.php");
-        commands.add("rm setup-drupal.php");
+        commands.add(sudo("cp /tmp/setup-drupal.php ."));
+        commands.add(sudo("php setup-drupal.php"));
+        commands.add(sudo("rm setup-drupal.php"));
 
         newScript(CUSTOMIZING).
                 failOnNonZeroResultCode().
@@ -86,17 +90,20 @@ public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements
     @Override
     public void launch() {
         List<String> commands = new LinkedList<String>();
-        commands.add("/etc/init.d/apache2 start");
+        commands.add(sudo("/etc/init.d/apache2 start"));
 
         newScript(LAUNCHING).
                 failOnNonZeroResultCode().
                 body.append(commands).execute();
+        
+        entity.setAttribute(WebAppService.HTTP_PORT, 80);
+        entity.setAttribute(WebAppService.ROOT_URL, "http://"+entity.getAttribute(Attributes.HOSTNAME)+"/");
     }
 
     @Override
     public boolean isRunning() {
         List<String> commands = new LinkedList<String>();
-        commands.add("/etc/init.d/apache2 status");
+        commands.add(sudo("/etc/init.d/apache2 status"));
 
         return newScript(CHECK_RUNNING).
                 body.append(commands).execute() == 0;
@@ -105,7 +112,7 @@ public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements
     @Override
     public void stop() {
         List<String> commands = new LinkedList<String>();
-        commands.add("/etc/init.d/apache2 stop");
+        commands.add(sudo("/etc/init.d/apache2 stop"));
 
         newScript(STOPPING).
                 failOnNonZeroResultCode().
