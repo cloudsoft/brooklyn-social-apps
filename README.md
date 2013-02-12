@@ -4,41 +4,51 @@ Brooklyn Social Apps Roll-out
 This project contains Brooklyn entities for the social applications like Drupal. It also contains a sample applications
 which deploys it to Amazon.
 
+### Prerequisites
+
+This has been tested to use Debian 6.0. Your milage may vary when used with other flavors of *nix.
+
 ### Compile
 
 To compile brooklyn-social-apps, simply `mvn clean install` in the project root.
 
-
 ### Run
 
-To run it, either:
+Follow the [getting started instructions](http://brooklyncentral.github.com/use/guide/quickstart/index.html), then add the social apps to your catalog.xml (or launch manually.)
 
-* Download and install the `brooklyn` CLI tool from http://brooklyncentral.github.com/ and run in the project root:
+```xml
+<catalog>
+  ...
+  <template type="io.cloudsoft.socialapps.drupal.examples.BasicDrupalApp" name="Basic Drupal App">
+    <description>Brooklyn Social Apps - Basic</description>
+  </template>
+  <template type="io.cloudsoft.socialapps.drupal.examples.ClusteredDrupalApp" name="Clustered Drupal App">
+    <description>Brooklyn Social Apps - Cluster</description>
+  </template>
+  ...
+  <classpath>
+    ...
+    <entry>file://path/to/your/jars</entry>
+    ...
+  </classpath>
+</catalog>
 
-  export BROOKLYN_CLASSPATH=target/brooklyn-social-app-0.0.1-SNAPSHOT.jar
-  brooklyn launch -a io.cloudsoft.mapr.MyM3App -l aws-ec2:us-east-1
 
-* Grab all dependencies (using maven, or in your favourite IDE) and run the static `main` in `io.cloudsoft.mapr.MyM3App`
-
-After about 20 minutes, it should print out the URL of the MapR master node and the Brooklyn console.
-You must manually accept the license in MapR (credentials defined in MyM3App),
-and then manually inform Brooklyn you have done so (effector setLicenseApproved on master),
-then the cluster will continue to set up (another 2 minutes or so).
-
-Once fully booted, you can resize (scale out) the worker cluster, stop nodes, and see a few sensors.
-As an exercise to the reader, add new sensors with the metrics you care about, and perhaps add a
-policy to automatically scale out.  (See other Brooklyn examples for an illustration.)
-
+```
 
 ### Setup
 
-In both cases you'll need AWS credentials in `~/.brooklyn/brooklyn.properties`:
+In both cases you'll need cloud credentials in `~/.brooklyn/brooklyn.properties`:
 
-  brooklyn.jclouds.aws-ec2.identity=AKXXXXXXXXXXXXXXXXXX
-  brooklyn.jclouds.aws-ec2.credential=secret01xxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+brooklyn.location.named.Rackspace\ US\ -\ Debian = jclouds:cloudservers-us
+brooklyn.location.named.Rackspace\ US\ -\ Debian.identity = username
+brooklyn.location.named.Rackspace\ US\ -\ Debian.credential = 3d____________<snip>__________cd
+brooklyn.location.named.Rackspace\ US\ -\ Debian.private-key-file = ~/.ssh/id_rsa
+brooklyn.location.named.Rackspace\ US\ -\ Debian.image-name-regex = Debian
+```
 
-Most other clouds should work too, with minor variations to the code (in particular the disk setup in MyM3App),
-as will fixed IP machines (bare-metal/byon).  MaaS clouds (metal-as-a-service) are in development, over at jclouds.org.
+Most other clouds should work too, with minor variations to the code, as will fixed IP machines (bare-metal/byon).
 
 
 ### Finally
