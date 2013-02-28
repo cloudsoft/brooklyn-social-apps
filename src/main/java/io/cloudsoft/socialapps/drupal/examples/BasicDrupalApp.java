@@ -37,6 +37,7 @@ public class BasicDrupalApp extends AbstractApplication {
     public BasicDrupalApp() {
         Map mysqlConf = MutableMap.of("creationScriptContents", SCRIPT);
         mySqlNode = new MySqlNode(mysqlConf, this);
+        mySqlNode.setConfig(MySqlNode.SUGGESTED_VERSION, "5.5.29");
 
         drupal = new Drupal(this);
         drupal.setConfig(Drupal.DATABASE_HOST, "127.0.0.1");

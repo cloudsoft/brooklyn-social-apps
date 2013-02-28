@@ -43,6 +43,7 @@ public class DrupalTest {
 
         Map mysqlConf = MutableMap.of("creationScriptContents", SCRIPT);
         MySqlNode mySqlNode = new MySqlNode(mysqlConf, app);
+        mySqlNode.setConfig(MySqlNode.SUGGESTED_VERSION, "5.5.29");
 
         Drupal  drupal = new Drupal(app);
         drupal.setConfig(Drupal.DATABASE_HOST, "127.0.0.1");

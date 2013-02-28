@@ -46,6 +46,7 @@ public class ClusteredDrupalApp extends AbstractApplication {
     public ClusteredDrupalApp() {
         Map mysqlConf = MutableMap.of("creationScriptContents", SCRIPT);
         mySqlNode = new MySqlNode(mysqlConf, this);
+        mySqlNode.setConfig(MySqlNode.SUGGESTED_VERSION, "5.5.29");
 
         ConfigurableEntityFactory<Drupal> drupalFactory = new BasicConfigurableEntityFactory<Drupal>(Drupal.class);
         drupalFactory.setConfig(Drupal.DATABASE_UP, attributeWhenReady(mySqlNode, MySqlNode.SERVICE_UP));
