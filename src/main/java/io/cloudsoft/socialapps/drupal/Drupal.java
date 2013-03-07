@@ -1,24 +1,18 @@
 package io.cloudsoft.socialapps.drupal;
 
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.SoftwareProcessEntity;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
-import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
-import groovy.time.TimeDuration;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-public class Drupal extends SoftwareProcessEntity {
+@ImplementedBy(DrupalImpl.class)
+public interface Drupal extends SoftwareProcess, WebAppService {
 
     @SetFromFlag("version")
     public static final BasicConfigKey<String> SUGGESTED_VERSION =
-            new BasicConfigKey<String>(SoftwareProcessEntity.SUGGESTED_VERSION, "7.17");
+            new BasicConfigKey<String>(SoftwareProcess.SUGGESTED_VERSION, "7.17");
 
     public static final BasicConfigKey<Boolean> DATABASE_UP =
             new BasicConfigKey<Boolean>(Boolean.class, "database.up", "",true);
@@ -66,50 +60,4 @@ public class Drupal extends SoftwareProcessEntity {
     @SetFromFlag("adminEmail")
     public static final BasicConfigKey<String> ADMIN_EMAIL =
             new BasicConfigKey<String>(String.class, "admin.email", "The email of the admin", null);
-
-
-    public Drupal(Map flags) {
-        this(flags, null);
-    }
-
-    public Drupal(Entity owner) {
-        this(new LinkedHashMap(), owner);
-    }
-
-    public Drupal(Map flags, Entity owner) {
-        super(flags, owner);
-    }
-
-    @Override
-    public Class getDriverInterface() {
-        return DrupalDriver.class;
-    }
-
-    @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Collection<Integer> ports = super.getRequiredOpenPorts();
-        ports.add(80);
-        ports.add(443);
-        return ports;
-    }
-    
-    @Override
-    protected void connectSensors() {
-        super.connectSensors();
-        FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new ServiceUpSensorAdapter());
-        serviceUpAdapter.poll(SERVICE_UP);
-    }
-
-    private class ServiceUpSensorAdapter extends FunctionSensorAdapter {
-
-        public ServiceUpSensorAdapter() {
-            //we want to scan every 10 seconds.
-            super(MutableMap.of("period", new TimeDuration(0, 0, 10, 0)));
-        }
-
-        @Override
-        public Object call() {
-            return getDriver().isRunning();
-        }
-    }
 }

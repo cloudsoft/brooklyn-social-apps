@@ -1,29 +1,33 @@
 package io.cloudsoft.socialapps.drupal.examples;
 
-import static java.util.Arrays.asList;
+import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import io.cloudsoft.socialapps.drupal.Drupal;
 
-import java.util.Map;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.location.basic.LocationRegistry;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.jclouds.JcloudsLocation;
-import brooklyn.util.MutableMap;
+import brooklyn.launcher.BrooklynServerDetails;
+import brooklyn.location.Location;
+import brooklyn.util.CommandLineUtil;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * This example Application starts up a single Ubuntu machine in Amazon EC2 that runs both Drupal and MySQL.
  * <p/>
  * To open the Brooklyn WebConsole open: http://localhost:8081 and login with admin/password.
  */
-public class BasicDrupalApp extends AbstractApplication {
+public class BasicDrupalApp extends ApplicationBuilder {
 
     public static final Logger log = LoggerFactory.getLogger(BasicDrupalApp.class);
 
@@ -34,39 +38,45 @@ public class BasicDrupalApp extends AbstractApplication {
     private Drupal drupal;
     private MySqlNode mySqlNode;
 
-    public BasicDrupalApp() {
-        Map mysqlConf = MutableMap.of("creationScriptContents", SCRIPT);
-        mySqlNode = new MySqlNode(mysqlConf, this);
-        mySqlNode.setConfig(MySqlNode.SUGGESTED_VERSION, "5.5.29");
+    @Override
+    protected void doBuild() {
+        createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+                .configure(MySqlNode.CREATION_SCRIPT_CONTENTS, SCRIPT));
 
-        drupal = new Drupal(this);
-        drupal.setConfig(Drupal.DATABASE_HOST, "127.0.0.1");
-        drupal.setConfig(Drupal.DATABASE_SCHEMA, "drupal");
-        drupal.setConfig(Drupal.DATABASE_USER, "drupal");
-        drupal.setConfig(Drupal.DATABASE_PORT, DependentConfiguration.attributeWhenReady(mySqlNode, MySqlNode.MYSQL_PORT));
-        drupal.setConfig(Drupal.DATABASE_PASSWORD, "password");
-        drupal.setConfig(Drupal.ADMIN_EMAIL, "foo@bar.com");
-        drupal.setConfig(Drupal.DATABASE_UP, DependentConfiguration.attributeWhenReady(mySqlNode, MySqlNode.SERVICE_UP));
+        createChild(BasicEntitySpec.newInstance(Drupal.class)
+                .configure(Drupal.DATABASE_UP, attributeWhenReady(mySqlNode, MySqlNode.SERVICE_UP))
+                .configure(Drupal.DATABASE_HOST, attributeWhenReady(mySqlNode, MySqlNode.HOSTNAME))
+                .configure(Drupal.DATABASE_PORT, attributeWhenReady(mySqlNode, MySqlNode.MYSQL_PORT))
+                .configure(Drupal.DATABASE_SCHEMA, "drupal")
+                .configure(Drupal.DATABASE_USER, "drupal")
+                .configure(Drupal.DATABASE_PASSWORD, "password")
+                .configure(Drupal.ADMIN_EMAIL, "foo@bar.com"));
     }
 
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines
-    public static void main(String[] args) throws Exception {
-        BasicDrupalApp app = new BasicDrupalApp();
-        BrooklynLauncher.manage(app, 8081);
+    public static void main(String[] argv) throws Exception {
+        List<String> args = Lists.newArrayList(argv);
+        String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
+        String location = CommandLineUtil.getCommandLineOption(args, "--location", "cloudservers-uk");
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         //brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-name-regex","ubuntu-oneiric");
         brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", "Debian");
         brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
-        LocationRegistry locationRegistry = new LocationRegistry(brooklynProperties);
-        JcloudsLocation jcloudsLocation = (JcloudsLocation) locationRegistry.resolve("cloudservers-uk");
+        
+        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+                .brooklynProperties(brooklynProperties)
+                .webconsolePort(port)
+                .launch();
 
-        log.info("Creating Machine (to be shared with MySQL/Drupal). This can take a few minutes.");
-        SshMachineLocation sshMachineLocation = jcloudsLocation.obtain();
-        log.info("Finished creating Machine");
+        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
-        log.info("Starting BasicDrupalApp");
-        app.start(asList(sshMachineLocation));
-        log.info("Finished creating BasicDrupalApp");
+        StartableApplication app = new BasicDrupalApp()
+                .appDisplayName("Simple drupal app")
+                .manage(server.getManagementContext());
+        
+        app.start(ImmutableList.of(loc));
+        
+        Entities.dumpInfo(app);
     }
 }

@@ -20,7 +20,7 @@ import brooklyn.util.ResourceUtils;
 
 public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements DrupalDriver {
 
-    public DrupalSshDriver(Drupal entity, SshMachineLocation machine) {
+    public DrupalSshDriver(DrupalImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -33,10 +33,9 @@ public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements
 
         String version = getVersion();
 
-        //configures postfix so we can do a headless install.
-        getLocation().execCommands("creating postfix config",asList(sudo("mkdir /etc/postfix")));
+        //configures postfix so we can do a headless install (later copied to /etc/postfix/main.cf)
         String postfixConfig = new ResourceUtils(DrupalSshDriver.class).getResourceAsString("classpath://io/cloudsoft/socialapps/drupal/main.cf");
-        getLocation().copyTo(new ByteArrayInputStream(postfixConfig.getBytes()), "/etc/postfix/main.cf");
+        getLocation().copyTo(new ByteArrayInputStream(postfixConfig.getBytes()), "/tmp/postfix-main.cf");
 
         List<String> commands = new LinkedList<String>();
         commands.add(CommonCommands.INSTALL_TAR);
@@ -59,11 +58,12 @@ public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements
         commands.add(sudo("chgrp -R www-data /var/www/sites/default/files"));
         commands.add(sudo("chmod -R g+u /var/www/sites/default/files"));
         commands.add(sudo("rm index.html"));
+        commands.add(sudo("mkdir -p /etc/postfix"));
+        commands.add(sudo("mv /tmp/postfix-main.cf /etc/postfix/main.cf"));
         commands.add("set HOSTNAME = 'hostname'");
         commands.add(sudo("sed -i.bk s/HOST_NAME/$HOSTNAME/g /etc/postfix/main.cf"));
         commands.add("set DEBIAN_FRONTEND='noninteractive'");
         commands.add(installPackage(of("apt","postfix"),null));
-
 
         newScript(INSTALLING).
                 failOnNonZeroResultCode().

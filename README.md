@@ -1,7 +1,7 @@
 Brooklyn Social Apps Roll-out
 ======================
 
-This project contains Brooklyn entities for the social applications like Drupal. It also contains a sample applications
+This project contains Brooklyn entities for the social applications like Drupal and Wordpress. It also contains a sample applications
 which deploys it to Amazon.
 
 ### Prerequisites
