@@ -25,7 +25,7 @@ import com.google.common.collect.Lists;
 
 @Catalog(name="Simple WordPress", 
         description="WordPress - the free and open source blogging tool and a content management system",
-        iconUrl="classpath:///io/cloudsoft/socialapps/wordpress/wordpress-logo-notext-rgb.png")
+        iconUrl="http://www.wordpress.org/about/images/logos/wordpress-logo-notext-rgb.png")
 public class BasicWordpressApp extends ApplicationBuilder {
     
     // TODO Currently only works on CentOS or RHEL

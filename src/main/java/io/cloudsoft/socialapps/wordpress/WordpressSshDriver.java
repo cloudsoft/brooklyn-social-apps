@@ -99,6 +99,28 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
         commands.add(sudo("cp /tmp/custom-install.php ."));
         commands.add(format("php custom-install.php"));
 
+        // Get metrics from apache httpd
+        // Note ugliness of sed+cp is because wrapping `sed -i.bak '...'` in `sudo -E -n -s --` 
+        // breaks on CentOS, because of quotes.
+        String httpdConfFile = "/etc/httpd/conf/httpd.conf";
+        String httpdConfTempFile = "/tmp/httpd.conf-"+entity.getId();
+        String serverStatusConf = 
+                "<Location /server-status>\n" +
+                "SetHandler server-status\n" +
+                "Order Deny,Allow\n" +
+                "Deny from all\n" +
+                "Allow from localhost\n" +
+                "</Location>\n";
+        commands.add(format("sed 's/^#ExtendedStatus On/ExtendedStatus On/' %s > %s", httpdConfFile, httpdConfTempFile));
+        
+        // TODO Don't add this multiple times!
+        // if [ \"`grep -E \"^SetHandler server-status\" "+httpdConfTempFile+"`\" == \"\" ]; then\n"
+        commands.add("cat >> "+httpdConfTempFile+" << END_CONF_"+entity.getId()+"\n" +
+        		serverStatusConf+"\n" +
+				"END_CONF_"+entity.getId()+"\n");
+        
+        commands.add(sudo(format("cp %s %s", httpdConfTempFile, httpdConfFile)));
+        
         newScript(CUSTOMIZING).
                 failOnNonZeroResultCode().
                 body.append(commands).execute();

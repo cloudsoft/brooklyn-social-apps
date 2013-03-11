@@ -1,6 +1,8 @@
 package io.cloudsoft.socialapps.wordpress;
 
 
+import static org.testng.Assert.assertTrue;
+
 import java.util.Arrays;
 
 import org.testng.annotations.Test;
@@ -11,6 +13,7 @@ import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.TestUtils;
 
 public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
 
@@ -25,7 +28,7 @@ public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
         MySqlNode mysql = app.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
                 .configure("creationScriptContents", SCRIPT));
 
-        Wordpress wordpress = app.createAndManageChild(BasicEntitySpec.newInstance(Wordpress.class)
+        final Wordpress wordpress = app.createAndManageChild(BasicEntitySpec.newInstance(Wordpress.class)
                 .configure(Wordpress.DATABASE_UP, DependentConfiguration.attributeWhenReady(mysql, MySqlNode.SERVICE_UP))
                 .configure(Wordpress.DATABASE_HOSTNAME, DependentConfiguration.attributeWhenReady(mysql, MySqlNode.HOSTNAME))
                 .configure(Wordpress.DATABASE_NAME, "wordpress")
@@ -36,8 +39,23 @@ public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
 
         app.start(Arrays.asList(loc));
 
-        String wordpressUrl = wordpress.getAttribute(Wordpress.ROOT_URL);
-        HttpTestUtils.assertContentEventuallyContainsText(wordpressUrl, "my custom title");
+        final String url = wordpress.getAttribute(Wordpress.ROOT_URL);
+        HttpTestUtils.assertContentEventuallyContainsText(url, "my custom title");
+        
+        // Should get request count
+        TestUtils.executeUntilSucceeds(new Runnable() {
+            @Override public void run() {
+                Integer count = wordpress.getAttribute(Wordpress.REQUEST_COUNT);
+                assertTrue(count != null && count > 0, "count="+count);
+            }});
+
+        // Should get an average request count (we drive some load to stimulate this as well)
+        TestUtils.executeUntilSucceeds(new Runnable() {
+            @Override public void run() {
+                HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
+                Double avg = wordpress.getAttribute(Wordpress.AVG_REQUESTS_PER_SECOND);
+                assertTrue(avg != null && avg > 0, "avg="+avg);
+            }});
     }
 
     // Convenience for easily running just this one test from Eclipse

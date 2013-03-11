@@ -19,11 +19,13 @@ import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.location.Location;
+import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.ImmutableList;
@@ -31,7 +33,7 @@ import com.google.common.collect.Lists;
 
 @Catalog(name="Clustered WordPress", 
         description="A WordPress cluster - the free and open source blogging tool and a content management system - with an nginx load balancer",
-        iconUrl="classpath:///io/cloudsoft/socialapps/wordpress/wordpress-logo-notext-rgb.png")
+        iconUrl="http://www.wordpress.org/about/images/logos/wordpress-logo-notext-rgb.png")
 public class ClusteredWordpressApp extends ApplicationBuilder {
     
     // TODO Currently only works on CentOS or RHEL
@@ -66,6 +68,11 @@ public class ClusteredWordpressApp extends ApplicationBuilder {
                         .configure(Wordpress.WEBLOG_TITLE, "my custom title")
                         .configure(Wordpress.WEBLOG_ADMIN_EMAIL, "aled.sage@gmail.com")));
                         
+        cluster.getCluster().addPolicy(AutoScalerPolicy.builder()
+                .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE)
+                .metricRange(10, 100)
+                .sizeRange(2, 5)
+                .build());
 
         SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(cluster);
     }
