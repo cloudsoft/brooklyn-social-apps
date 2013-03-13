@@ -11,8 +11,9 @@ if ( is_blog_installed() ) die("Blog already installed; no-op");
 $weblog_title = "${entity.weblogTitle}";
 $admin_email = "${entity.weblogAdminEmail}";
 $public = ${entity.weblogPublic};
+$password = ${entity.weblogAdminPassword};
 
-$result = wp_install($weblog_title, __('admin'), $admin_email, $public);
+$result = wp_install($weblog_title, __('admin'), $admin_email, $public, null, $password);
 extract($result);
 ?>
 

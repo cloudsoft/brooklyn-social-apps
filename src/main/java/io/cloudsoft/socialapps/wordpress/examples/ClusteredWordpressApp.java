@@ -66,26 +66,45 @@ public class ClusteredWordpressApp extends ApplicationBuilder {
                         .configure(Wordpress.DATABASE_USER, "wordpress")
                         .configure(Wordpress.DATABASE_PASSWORD, "password")
                         .configure(Wordpress.WEBLOG_TITLE, "my custom title")
-                        .configure(Wordpress.WEBLOG_ADMIN_EMAIL, "aled.sage@gmail.com")));
+                        .configure(Wordpress.WEBLOG_ADMIN_EMAIL, "aled.sage@gmail.com")
+                        .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, "password")
+                        ));
                         
         cluster.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE)
-                .metricRange(10, 100)
+                .metricRange(10, 25)
                 .sizeRange(2, 5)
                 .build());
 
-        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(cluster);
+        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(getApp());
     }
 
     public static void main(String[] argv) throws Exception {
         List<String> args = Lists.newArrayList(argv);
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
-        String location = CommandLineUtil.getCommandLineOption(args, "--location", "aws-ec2:us-east-1");
+        String location = CommandLineUtil.getCommandLineOption(args, "--location", null);
 
-        // Image: {id=us-east-1/ami-7d7bfc14, providerId=ami-7d7bfc14, name=RightImage_CentOS_6.3_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.0, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-        brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-id", "us-east-1/ami-7d7bfc14");
-        
+
+        // alex's choice: older centos probably, but a better way to set
+        // (put this in brooklyn.properties and this location will be used)
+//        brooklyn.location.named.aws-ec2-us-east-1-centos=jclouds:aws-ec2:us-east-1
+//        brooklyn.location.named.aws-ec2-us-east-1-centos.imageId=us-east-1/ami-043f9c6d
+//        brooklyn.location.named.aws-ec2-us-east-1-centos.minRam=4096
+//        brooklyn.location.named.aws-ec2-us-east-1-centos.user=root
+        if (location==null && brooklynProperties.containsKey("brooklyn.location.named.aws-ec2-us-east-1-centos")) {
+            log.info("Using default location named:aws-ec2-us-east-1-centos because it is available");
+            location = "named:aws-ec2-us-east-1-centos";
+        }
+  
+        // aled's choice:
+        // Image: {id=us-east-1/ami-7d7bfc14, providerId=ami-7d7bfc14, name=RightImage_CentOS_6.3_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.0, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        if (location==null) {
+            log.info("Using default CentOS image in default location AWS us-east-1");
+            brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-id", "us-east-1/ami-7d7bfc14");
+            location = "aws-ec2:us-east-1";
+        }
+
         BrooklynServerDetails server = BrooklynLauncher.newLauncher()
                 .brooklynProperties(brooklynProperties)
                 .webconsolePort(port)

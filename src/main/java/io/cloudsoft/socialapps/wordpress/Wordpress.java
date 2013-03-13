@@ -9,6 +9,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.text.Identifiers;
 
 @ImplementedBy(WordpressImpl.class)
 public interface Wordpress extends SoftwareProcess, WebAppService {
@@ -56,7 +57,12 @@ public interface Wordpress extends SoftwareProcess, WebAppService {
     
     @SetFromFlag("weblogAdminEmail")
     ConfigKey<String> WEBLOG_ADMIN_EMAIL = new BasicConfigKey<String>(
-            String.class, "wordpress.weblog.adminEmail", "E-mail address for the weblog admin user", "myuser@mydomain.com");
+            String.class, "wordpress.weblog.adminEmail", "E-mail address for the weblog admin user (default to empty)", "");
+    
+    @SetFromFlag("weblogAdminPassword")
+    // TODO would be nice if empty password causes auto-gen
+    ConfigKey<String> WEBLOG_ADMIN_PASSWORD = new BasicConfigKey<String>(
+            String.class, "wordpress.weblog.adminPassword", "Password for the weblog admin user (defaults to 'password')", "password");
     
     @SetFromFlag("isWeblogPublic")
     ConfigKey<Boolean> IS_WEBLOG_PUBLIC = new BasicConfigKey<Boolean>(

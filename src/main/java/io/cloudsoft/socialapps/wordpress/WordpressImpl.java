@@ -147,8 +147,12 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
 	
 	public String getWeblogAdminEmail() {
         return getConfig(WEBLOG_ADMIN_EMAIL);
-	    
 	}
+
+	public String getWeblogAdminPassword() {
+	    return getConfig(WEBLOG_ADMIN_PASSWORD);
+	}
+
 	public String getWeblogPublic() {
 	    return getConfig(IS_WEBLOG_PUBLIC).toString();
 	}
