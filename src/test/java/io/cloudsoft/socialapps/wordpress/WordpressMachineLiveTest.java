@@ -43,7 +43,7 @@ public class WordpressMachineLiveTest {
     public void setUp() throws Exception {
         InetAddress addr = NetworkUtils.getInetAddressWithFixedName(hostname1);
         machine1 = new SshMachineLocation(MutableMap.of("user", user, "address", addr));//, SshMachineLocation.PRIVATE_KEY_FILE, "/Users/aled/.ssh/id_rsa"));
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
     
     @AfterMethod(alwaysRun=true)

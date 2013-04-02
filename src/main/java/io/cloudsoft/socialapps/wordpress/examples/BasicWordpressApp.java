@@ -32,6 +32,9 @@ public class BasicWordpressApp extends ApplicationBuilder {
     
     public static final Logger log = LoggerFactory.getLogger(BasicWordpressApp.class);
 
+    final static String PASSWORD = "pa55w0rd";
+    final static String EMAIL = "your_email@your_domain_set_in_brooklyn";
+    
     final static String SCRIPT = "create database wordpress; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'localhost'  IDENTIFIED BY 'password'; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'127.0.0.1'  IDENTIFIED BY 'password'; " +
@@ -52,8 +55,11 @@ public class BasicWordpressApp extends ApplicationBuilder {
                 .configure(Wordpress.DATABASE_NAME, "wordpress")
                 .configure(Wordpress.DATABASE_USER, "wordpress")
                 .configure(Wordpress.DATABASE_PASSWORD, "password")
-                .configure(Wordpress.WEBLOG_TITLE, "my custom title")
-                .configure(Wordpress.WEBLOG_ADMIN_EMAIL, "aled.sage@gmail.com"));
+                .configure(Wordpress.WEBLOG_TITLE, "Welcome to WordPress, installed by Brooklyn!")
+                .configure(Wordpress.WEBLOG_ADMIN_EMAIL, EMAIL)
+                .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, PASSWORD)
+                .configure(Wordpress.USE_W3_TOTAL_CACHE, true)
+                );
     }
 
     public static void main(String[] argv) throws Exception {

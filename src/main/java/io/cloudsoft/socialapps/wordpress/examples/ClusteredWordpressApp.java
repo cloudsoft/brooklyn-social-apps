@@ -65,9 +65,10 @@ public class ClusteredWordpressApp extends ApplicationBuilder {
                         .configure(Wordpress.DATABASE_NAME, "wordpress")
                         .configure(Wordpress.DATABASE_USER, "wordpress")
                         .configure(Wordpress.DATABASE_PASSWORD, "password")
-                        .configure(Wordpress.WEBLOG_TITLE, "my custom title")
-                        .configure(Wordpress.WEBLOG_ADMIN_EMAIL, "aled.sage@gmail.com")
-                        .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, "password")
+                        .configure(Wordpress.WEBLOG_TITLE, "Welcome to WordPress, installed by Brooklyn!")
+                        .configure(Wordpress.WEBLOG_ADMIN_EMAIL, BasicWordpressApp.EMAIL)
+                        .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, BasicWordpressApp.PASSWORD)
+                        .configure(Wordpress.USE_W3_TOTAL_CACHE, true)
                         ));
                         
         cluster.getCluster().addPolicy(AutoScalerPolicy.builder()

@@ -50,7 +50,7 @@ public class WordpressMachineClusterLiveTest {
         machine1 = new SshMachineLocation(MutableMap.of("user", user, "address", addr));//, SshMachineLocation.PRIVATE_KEY_FILE, "/Users/aled/.ssh/id_rsa"));
         machine2 = new SshMachineLocation(MutableMap.of("user", user, "address", addr2));//, SshMachineLocation.PRIVATE_KEY_FILE, "/Users/aled/.ssh/id_rsa"));
         machinePool = new FixedListMachineProvisioningLocation<SshMachineLocation>(MutableMap.of("machines", ImmutableList.of(machine1, machine2)));
-        app = ApplicationBuilder.builder(TestApplication.class).manage();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
     
     @AfterMethod(alwaysRun=true)

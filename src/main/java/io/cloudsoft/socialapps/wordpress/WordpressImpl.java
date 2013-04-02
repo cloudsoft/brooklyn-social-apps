@@ -157,6 +157,21 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
 	    return getConfig(IS_WEBLOG_PUBLIC).toString();
 	}
 
+	/** extra WP config inserted into the wp-config.php file */
+	public String getExtraWpConfig() {
+	    StringBuilder extras = new StringBuilder();
+	    
+	    Boolean dbCache = getConfig(WEBLOG_DB_CACHE);
+	    Boolean useW3TotalCache = getConfig(USE_W3_TOTAL_CACHE);
+	    
+	    if (dbCache!=null || useW3TotalCache==Boolean.TRUE) {
+	        String value = dbCache == Boolean.FALSE ? "false" : "true";
+	        extras.append("define('WP_CACHE', "+value+");\n");
+	    }
+	    
+	    return extras.toString();
+	}
+	
 	/**
 	 * Authentication Unique Keys and Salts.
 	 *
@@ -191,4 +206,9 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
             EntityUtils.consume(httpResponse.getEntity());
         }
 	}
+
+    @Override
+    public String getShortName() {
+        return "wordpress-httpd";
+    }
 }
