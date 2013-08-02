@@ -8,9 +8,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
+import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
@@ -31,10 +35,18 @@ import com.google.common.collect.Lists;
  * <p/>
  * http://www.johnandcailin.com/blog/john/scaling-drupal-open-source-infrastructure-high-traffic-drupal-sites
  */
+@Catalog(name="Clusted Drupal App",
+    description="Drupal is an open source content management platform. "+
+            "A clustered load-balanced drupal (Requires Debian).",
+    iconUrl="classpath://io/cloudsoft/socialapps/drupal/drupal-icon.png")
 public class ClusteredDrupalApp extends AbstractApplication {
 
     public static final Logger log = LoggerFactory.getLogger(BasicDrupalApp.class);
 
+    @CatalogConfig(label="Admin e-mail")
+    public static final ConfigKey<String> ADMIN_EMAIL = ConfigKeys.newConfigKeyWithDefault(
+            Drupal.ADMIN_EMAIL, "foo@example.com");
+    
     private final static String SCRIPT = "create database drupal; " +
             "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON drupal.* TO 'drupal'@'%'  IDENTIFIED BY 'password'; " +
             "FLUSH PRIVILEGES;";
@@ -54,7 +66,7 @@ public class ClusteredDrupalApp extends AbstractApplication {
                 .configure(Drupal.DATABASE_SCHEMA, "drupal")
                 .configure(Drupal.DATABASE_USER, "drupal")
                 .configure(Drupal.DATABASE_PASSWORD, "password")
-                .configure(Drupal.ADMIN_EMAIL, "foo@example.com");
+                .configure(Drupal.ADMIN_EMAIL, getConfig(ADMIN_EMAIL));
 
         cluster = addChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
                 .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, drupalSpec)

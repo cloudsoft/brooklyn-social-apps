@@ -8,8 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
@@ -29,8 +32,13 @@ public class BasicWordpressApp extends AbstractApplication {
     
     public static final Logger log = LoggerFactory.getLogger(BasicWordpressApp.class);
 
-    final static String PASSWORD = "pa55w0rd";
-    final static String EMAIL = "your_email@your_domain_set_in_brooklyn";
+    @CatalogConfig(label="Weblog admin e-mail")
+    public static final ConfigKey<String> WEBLOG_ADMIN_EMAIL = ConfigKeys.newConfigKeyWithDefault(
+            Wordpress.WEBLOG_ADMIN_EMAIL, "foo@example.com");
+    
+    @CatalogConfig(label="Weblog admin password")
+    public static final ConfigKey<String> WEBLOG_ADMIN_PASSWORD = ConfigKeys.newConfigKeyWithDefault(
+            Wordpress.WEBLOG_ADMIN_PASSWORD, "pa55w0rd");
     
     final static String SCRIPT = "create database wordpress; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'localhost'  IDENTIFIED BY 'password'; " +
@@ -53,8 +61,8 @@ public class BasicWordpressApp extends AbstractApplication {
                 .configure(Wordpress.DATABASE_USER, "wordpress")
                 .configure(Wordpress.DATABASE_PASSWORD, "password")
                 .configure(Wordpress.WEBLOG_TITLE, "Welcome to WordPress, installed by Brooklyn!")
-                .configure(Wordpress.WEBLOG_ADMIN_EMAIL, EMAIL)
-                .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, PASSWORD)
+                .configure(Wordpress.WEBLOG_ADMIN_EMAIL, getConfig(WEBLOG_ADMIN_EMAIL))
+                .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, getConfig(WEBLOG_ADMIN_PASSWORD))
                 .configure(Wordpress.USE_W3_TOTAL_CACHE, true)
                 );
     }
