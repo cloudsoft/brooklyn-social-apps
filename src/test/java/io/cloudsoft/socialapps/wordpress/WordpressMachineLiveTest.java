@@ -22,8 +22,8 @@ import brooklyn.management.Task;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,14 +42,14 @@ public class WordpressMachineLiveTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        InetAddress addr = NetworkUtils.getInetAddressWithFixedName(hostname1);
+        InetAddress addr = Networking.getInetAddressWithFixedName(hostname1);
         machine1 = new SshMachineLocation(MutableMap.of("user", user, "address", addr));//, SshMachineLocation.PRIVATE_KEY_FILE, "/Users/aled/.ssh/id_rsa"));
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test(groups="Live")

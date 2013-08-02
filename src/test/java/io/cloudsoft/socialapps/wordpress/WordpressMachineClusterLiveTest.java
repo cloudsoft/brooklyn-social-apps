@@ -23,8 +23,8 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.MutableMap;
-import brooklyn.util.NetworkUtils;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,8 +46,8 @@ public class WordpressMachineClusterLiveTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        InetAddress addr = NetworkUtils.getInetAddressWithFixedName(hostname1);
-        InetAddress addr2 = NetworkUtils.getInetAddressWithFixedName(hostname2);
+        InetAddress addr = Networking.getInetAddressWithFixedName(hostname1);
+        InetAddress addr2 = Networking.getInetAddressWithFixedName(hostname2);
         machine1 = new SshMachineLocation(MutableMap.of("user", user, "address", addr));//, SshMachineLocation.PRIVATE_KEY_FILE, "/Users/aled/.ssh/id_rsa"));
         machine2 = new SshMachineLocation(MutableMap.of("user", user, "address", addr2));//, SshMachineLocation.PRIVATE_KEY_FILE, "/Users/aled/.ssh/id_rsa"));
         machinePool = new FixedListMachineProvisioningLocation<SshMachineLocation>(MutableMap.of("machines", ImmutableList.of(machine1, machine2)));
@@ -56,7 +56,7 @@ public class WordpressMachineClusterLiveTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app);
+        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test(groups="Live")
