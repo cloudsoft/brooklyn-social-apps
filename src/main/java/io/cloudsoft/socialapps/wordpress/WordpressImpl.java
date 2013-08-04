@@ -62,7 +62,7 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
                                 return getDriver().isRunning();
                             }
                         })
-                        .onError(Functions.constant(Boolean.FALSE)))
+                        .onException(Functions.constant(Boolean.FALSE)))
                 .build();
         
         /*
@@ -84,8 +84,7 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
                     .poll(new SshPollConfig<Integer>(REQUEST_COUNT)
                             .period(1000)
                             .command("curl -f -L \"http://127.0.0.1/server-status?auto\"")
-                            .failOnNonZeroResultCode()
-                            .onError(Functions.constant(-1))
+                            .onException(Functions.constant(-1))
                             .onSuccess(SshValueFunctions.chain(SshValueFunctions.stdout(), new Function<String, Integer>() {
                                     @Override public Integer apply(@Nullable String stdout) {
                                         for (String line : stdout.split("\n")) {

@@ -1,5 +1,6 @@
 package io.cloudsoft.socialapps.wordpress.examples;
 
+import io.cloudsoft.socialapps.drupal.Drupal;
 import io.cloudsoft.socialapps.wordpress.CustomNginxControllerImpl;
 import io.cloudsoft.socialapps.wordpress.Wordpress;
 
@@ -9,9 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxy.nginx.NginxController;
@@ -30,13 +34,21 @@ import com.google.common.collect.Lists;
 
 @Catalog(name="Clustered WordPress", 
         description="A WordPress cluster - the free and open source blogging tool and a content management system - with an nginx load balancer",
-        iconUrl="http://www.wordpress.org/about/images/logos/wordpress-logo-notext-rgb.png")
+        iconUrl="classpath://io/cloudsoft/socialapps/wordpress/wordpress-logo-notext-rgb.png")
 public class ClusteredWordpressApp extends AbstractApplication {
     
     // TODO Currently only works on CentOS or RHEL
     
     public static final Logger log = LoggerFactory.getLogger(ClusteredWordpressApp.class);
 
+    @CatalogConfig(label="Weblog admin e-mail")
+    public static final ConfigKey<String> WEBLOG_ADMIN_EMAIL = ConfigKeys.newConfigKeyWithDefault(
+            Wordpress.WEBLOG_ADMIN_EMAIL, "foo@example.com");
+    
+    @CatalogConfig(label="Weblog admin password")
+    public static final ConfigKey<String> WEBLOG_ADMIN_PASSWORD = ConfigKeys.newConfigKeyWithDefault(
+            Wordpress.WEBLOG_ADMIN_PASSWORD, "pa55w0rd");
+    
     final static String SCRIPT = "create database wordpress; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'localhost'  IDENTIFIED BY 'password'; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'127.0.0.1'  IDENTIFIED BY 'password'; " +
@@ -63,8 +75,8 @@ public class ClusteredWordpressApp extends AbstractApplication {
                         .configure(Wordpress.DATABASE_USER, "wordpress")
                         .configure(Wordpress.DATABASE_PASSWORD, "password")
                         .configure(Wordpress.WEBLOG_TITLE, "Welcome to WordPress, installed by Brooklyn!")
-                        .configure(Wordpress.WEBLOG_ADMIN_EMAIL, BasicWordpressApp.EMAIL)
-                        .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, BasicWordpressApp.PASSWORD)
+                        .configure(Wordpress.WEBLOG_ADMIN_EMAIL, getConfig(WEBLOG_ADMIN_EMAIL))
+                        .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, getConfig(WEBLOG_ADMIN_PASSWORD))
                         .configure(Wordpress.USE_W3_TOTAL_CACHE, true)
                         ));
                         

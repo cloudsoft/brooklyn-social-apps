@@ -6,7 +6,7 @@ import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.util.MutableMap;
+import brooklyn.util.collections.MutableMap;
 
 public class DrupalImpl extends SoftwareProcessImpl implements Drupal {
 
