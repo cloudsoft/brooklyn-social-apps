@@ -1,10 +1,10 @@
 package io.cloudsoft.socialapps.wordpress;
 
 
-import static brooklyn.entity.basic.lifecycle.CommonCommands.installPackage;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.alternatives;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.sudo;
-import static brooklyn.entity.basic.lifecycle.CommonCommands.ok;
+import static brooklyn.util.ssh.CommonCommands.alternatives;
+import static brooklyn.util.ssh.CommonCommands.installPackage;
+import static brooklyn.util.ssh.CommonCommands.ok;
+import static brooklyn.util.ssh.CommonCommands.sudo;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.String.format;
 
@@ -15,10 +15,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.lifecycle.CommonCommands;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.ssh.CommonCommands;
 
 public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver implements WordpressDriver {
 

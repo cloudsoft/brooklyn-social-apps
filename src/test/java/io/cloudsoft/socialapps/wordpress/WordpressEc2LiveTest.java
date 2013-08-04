@@ -12,8 +12,8 @@ import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
+import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestUtils;
 
 public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
 
@@ -43,17 +43,17 @@ public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
         HttpTestUtils.assertContentEventuallyContainsText(url, "my custom title");
         
         // Should get request count
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
                 Integer count = wordpress.getAttribute(Wordpress.REQUEST_COUNT);
                 assertTrue(count != null && count > 0, "count="+count);
             }});
 
         // Should get an average request count (we drive some load to stimulate this as well)
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
                 HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
-                Double avg = wordpress.getAttribute(Wordpress.AVG_REQUESTS_PER_SECOND);
+                Double avg = wordpress.getAttribute(Wordpress.REQUESTS_PER_SECOND_IN_WINDOW);
                 assertTrue(avg != null && avg > 0, "avg="+avg);
             }});
     }

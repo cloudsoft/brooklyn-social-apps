@@ -6,7 +6,7 @@ which deploys it to Amazon.
 
 ### Prerequisites
 
-This has been tested to use Debian 6.0. Your milage may vary when used with other flavors of *nix.
+Drupal has been tested on Debian 6.0. Wordpress has been tested on CentOS 6.3. Your milage may vary when used with other flavors of *nix.
 
 ### Compile
 

@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class WordpressMachineClusterLiveTest {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(WordpressMachineClusterLiveTest.class);
 
     // TODO Substitute for your own machine details here

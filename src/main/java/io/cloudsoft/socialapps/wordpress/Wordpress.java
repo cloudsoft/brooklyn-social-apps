@@ -10,7 +10,6 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.text.Identifiers;
 
 @ImplementedBy(WordpressImpl.class)
 public interface Wordpress extends SoftwareProcess, WebAppService, HasShortName {

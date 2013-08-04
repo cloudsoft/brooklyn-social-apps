@@ -9,17 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
 import brooklyn.util.CommandLineUtil;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
@@ -27,7 +24,7 @@ import com.google.common.collect.Lists;
  * <p/>
  * To open the Brooklyn WebConsole open: http://localhost:8081 and login with admin/password.
  */
-public class BasicDrupalApp extends ApplicationBuilder {
+public class BasicDrupalApp extends AbstractApplication {
 
     public static final Logger log = LoggerFactory.getLogger(BasicDrupalApp.class);
 
@@ -40,11 +37,11 @@ public class BasicDrupalApp extends ApplicationBuilder {
     private MySqlNode mySqlNode;
 
     @Override
-    protected void doBuild() {
-        mySqlNode = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+    public void init() {
+        mySqlNode = addChild(BasicEntitySpec.newInstance(MySqlNode.class)
                 .configure(MySqlNode.CREATION_SCRIPT_CONTENTS, SCRIPT));
 
-        drupal = createChild(BasicEntitySpec.newInstance(Drupal.class)
+        drupal = addChild(BasicEntitySpec.newInstance(Drupal.class)
                 .configure(Drupal.DATABASE_UP, attributeWhenReady(mySqlNode, MySqlNode.SERVICE_UP))
                 .configure(Drupal.DATABASE_HOST, attributeWhenReady(mySqlNode, MySqlNode.HOSTNAME))
                 .configure(Drupal.DATABASE_PORT, attributeWhenReady(mySqlNode, MySqlNode.MYSQL_PORT))
@@ -60,24 +57,22 @@ public class BasicDrupalApp extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "cloudservers-uk");
 
+        // Image: {id=us-east-1/ami-7ce17315, providerId=ami-7ce17315, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=debian, arch=paravirtual, version=6.0, description=Debian 6.0.7 (Squeeze),  is64Bit=true}, description=Debian 6.0.7 (Squeeze), version=20091011, status=AVAILABLE[available], loginUser=ubuntu, userMetadata={owner=379101102735, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        // TODO Set for only us-east-1 region, rather than all aws-ec2
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-        //brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-name-regex","ubuntu-oneiric");
-        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", "Debian");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-id", "us-east-1/ami-7ce17315");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.loginUser", "admin");
+        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", "Debian 6");
         brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
         
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .brooklynProperties(brooklynProperties)
+                .application(EntitySpecs.appSpec(BasicDrupalApp.class)
+                        .displayName("Simple drupal app"))
                 .webconsolePort(port)
-                .launch();
+                .location(location)
+                .start();
 
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = new BasicDrupalApp()
-                .appDisplayName("Simple drupal app")
-                .manage(server.getManagementContext());
-        
-        app.start(ImmutableList.of(loc));
-        
-        Entities.dumpInfo(app);
+        Entities.dumpInfo(launcher.getApplications());
     }
 }

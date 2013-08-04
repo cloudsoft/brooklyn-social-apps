@@ -19,8 +19,8 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
+import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.MutableMap;
 import brooklyn.util.NetworkUtils;
@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class WordpressMachineLiveTest {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(WordpressMachineLiveTest.class);
 
     // TODO Substitute for your own machine details here
@@ -78,17 +79,17 @@ public class WordpressMachineLiveTest {
         HttpTestUtils.assertContentEventuallyContainsText(url, "my custom title");
 
         // Should get request count
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
                 Integer count = wordpress.getAttribute(Wordpress.REQUEST_COUNT);
                 assertTrue(count != null && count > 0, "count="+count);
             }});
 
         // Should get an average request count (we drive some load to stimulate this as well)
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
                 HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
-                Double avg = wordpress.getAttribute(Wordpress.AVG_REQUESTS_PER_SECOND);
+                Double avg = wordpress.getAttribute(Wordpress.REQUESTS_PER_SECOND_IN_WINDOW);
                 assertTrue(avg != null && avg > 0, "avg="+avg);
             }});
 

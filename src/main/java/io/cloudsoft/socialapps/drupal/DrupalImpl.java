@@ -1,14 +1,11 @@
 package io.cloudsoft.socialapps.drupal;
 
 
-import groovy.time.TimeDuration;
-
 import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.adapter.FunctionSensorAdapter;
 import brooklyn.util.MutableMap;
 
 public class DrupalImpl extends SoftwareProcessImpl implements Drupal {
@@ -54,20 +51,12 @@ public class DrupalImpl extends SoftwareProcessImpl implements Drupal {
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        FunctionSensorAdapter serviceUpAdapter = sensorRegistry.register(new ServiceUpSensorAdapter());
-        serviceUpAdapter.poll(SERVICE_UP);
+        super.connectServiceUpIsRunning();
     }
 
-    private class ServiceUpSensorAdapter extends FunctionSensorAdapter {
-
-        public ServiceUpSensorAdapter() {
-            //we want to scan every 10 seconds.
-            super(MutableMap.of("period", new TimeDuration(0, 0, 10, 0)));
-        }
-
-        @Override
-        public Object call() {
-            return getDriver().isRunning();
-        }
+    @Override
+    protected void disconnectSensors() {
+        super.disconnectSensors();
+        super.disconnectServiceUpIsRunning();
     }
 }

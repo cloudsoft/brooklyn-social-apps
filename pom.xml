@@ -12,10 +12,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <brooklyn.version>0.5.0-rc.2</brooklyn.version>
+        <brooklyn.version>0.5.0</brooklyn.version>
         <groovy.version>1.8.6</groovy.version>
-        <testng.version>6.7</testng.version>
-        <slf4j.version>1.6.4</slf4j.version>
+        <testng.version>6.8</testng.version>
+        <slf4j.version>1.6.6</slf4j.version>
         <surefire.version>2.13</surefire.version>
 
         <includedTestGroups />
@@ -106,7 +106,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.3.1</version>
+                    <version>2.4</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-eclipse-plugin</artifactId>
@@ -125,7 +125,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>

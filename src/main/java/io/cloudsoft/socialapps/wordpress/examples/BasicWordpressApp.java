@@ -9,24 +9,21 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
 import brooklyn.util.CommandLineUtil;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @Catalog(name="Simple WordPress", 
         description="WordPress - the free and open source blogging tool and a content management system",
         iconUrl="http://www.wordpress.org/about/images/logos/wordpress-logo-notext-rgb.png")
-public class BasicWordpressApp extends ApplicationBuilder {
+public class BasicWordpressApp extends AbstractApplication {
     
     // TODO Currently only works on CentOS or RHEL
     
@@ -45,11 +42,11 @@ public class BasicWordpressApp extends ApplicationBuilder {
     private Wordpress wordpress;
 
     @Override
-    protected void doBuild() {
-        mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+    public void init() {
+        mysql = addChild(BasicEntitySpec.newInstance(MySqlNode.class)
                 .configure("creationScriptContents", SCRIPT));
 
-        wordpress = createChild(BasicEntitySpec.newInstance(Wordpress.class)
+        wordpress = addChild(BasicEntitySpec.newInstance(Wordpress.class)
                 .configure(Wordpress.DATABASE_UP, DependentConfiguration.attributeWhenReady(mysql, MySqlNode.SERVICE_UP))
                 .configure(Wordpress.DATABASE_HOSTNAME, DependentConfiguration.attributeWhenReady(mysql, MySqlNode.HOSTNAME))
                 .configure(Wordpress.DATABASE_NAME, "wordpress")
@@ -68,22 +65,20 @@ public class BasicWordpressApp extends ApplicationBuilder {
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "aws-ec2:us-east-1");
 
         // Image: {id=us-east-1/ami-7d7bfc14, providerId=ami-7d7bfc14, name=RightImage_CentOS_6.3_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.0, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        // TODO Set for only us-east-1 region, rather than all aws-ec2
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-        brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-id", "us-east-1/ami-7d7bfc14");
-        
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-id", "us-east-1/ami-7ce17315");
+        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", "CentOS 6.0");
+        brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
+
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .brooklynProperties(brooklynProperties)
+                .application(EntitySpecs.appSpec(BasicWordpressApp.class)
+                        .displayName("Simple wordpress app"))
                 .webconsolePort(port)
-                .launch();
+                .location(location)
+                .start();
 
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = new BasicWordpressApp()
-                .appDisplayName("Simple wordpress app")
-                .manage(server.getManagementContext());
-        
-        app.start(ImmutableList.of(loc));
-        
-        Entities.dumpInfo(app);
+        Entities.dumpInfo(launcher.getApplications());
     }
 }

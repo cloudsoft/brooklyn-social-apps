@@ -10,20 +10,17 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.BasicEntitySpec;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
 import brooklyn.util.CommandLineUtil;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
@@ -34,7 +31,7 @@ import com.google.common.collect.Lists;
  * <p/>
  * http://www.johnandcailin.com/blog/john/scaling-drupal-open-source-infrastructure-high-traffic-drupal-sites
  */
-public class ClusteredDrupalApp extends ApplicationBuilder {
+public class ClusteredDrupalApp extends AbstractApplication {
 
     public static final Logger log = LoggerFactory.getLogger(BasicDrupalApp.class);
 
@@ -46,8 +43,8 @@ public class ClusteredDrupalApp extends ApplicationBuilder {
     private ControlledDynamicWebAppCluster cluster;
 
     @Override
-    protected void doBuild() {
-        mySqlNode = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+    public void init() {
+        mySqlNode = addChild(BasicEntitySpec.newInstance(MySqlNode.class)
                 .configure(MySqlNode.CREATION_SCRIPT_CONTENTS, SCRIPT));
 
         EntitySpec<Drupal> drupalSpec = BasicEntitySpec.newInstance(Drupal.class)
@@ -59,11 +56,11 @@ public class ClusteredDrupalApp extends ApplicationBuilder {
                 .configure(Drupal.DATABASE_PASSWORD, "password")
                 .configure(Drupal.ADMIN_EMAIL, "foo@example.com");
 
-        cluster = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        cluster = addChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
                 .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, drupalSpec)
                 .configure(ControlledDynamicWebAppCluster.INITIAL_SIZE, 2));
         
-        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(getApp());
+        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(this);
     }
 
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines
@@ -72,24 +69,22 @@ public class ClusteredDrupalApp extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "aws-ec2:us-east-1");
 
-        // Image: {id=us-east-1/ami-1970da70, providerId=ami-1970da70, name=RightImage_Ubuntu_12.04_x64_v5.8.8, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=12.04, description=rightscale-us-east/RightImage_Ubuntu_12.04_x64_v5.8.8.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_12.04_x64_v5.8.8.manifest.xml, version=5.8.8, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        // Image: {id=us-east-1/ami-7ce17315, providerId=ami-7ce17315, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=debian, arch=paravirtual, version=6.0, description=Debian 6.0.7 (Squeeze),  is64Bit=true}, description=Debian 6.0.7 (Squeeze), version=20091011, status=AVAILABLE[available], loginUser=ubuntu, userMetadata={owner=379101102735, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
         // TODO Set for only us-east-1 region, rather than all aws-ec2
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
-        brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-id", "us-east-1/ami-1970da70");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-id", "us-east-1/ami-7ce17315");
+        brooklynProperties.put("brooklyn.jclouds.aws-ec2.loginUser", "admin");
+        brooklynProperties.put("brooklyn.jclouds.cloudservers-uk.image-name-regex", "Debian 6");
+        brooklynProperties.remove("brooklyn.jclouds.cloudservers-uk.image-id");
         
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .brooklynProperties(brooklynProperties)
+                .application(EntitySpecs.appSpec(ClusteredDrupalApp.class)
+                        .displayName("Clustered drupal app"))
                 .webconsolePort(port)
-                .launch();
+                .location(location)
+                .start();
 
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = new ClusteredDrupalApp()
-                .appDisplayName("Clustered drupal app")
-                .manage(server.getManagementContext());
-        
-        app.start(ImmutableList.of(loc));
-        
-        Entities.dumpInfo(app);
+        Entities.dumpInfo(launcher.getApplications());
     }
 }

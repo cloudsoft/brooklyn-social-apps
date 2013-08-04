@@ -11,30 +11,27 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.Catalog;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.location.Location;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @Catalog(name="Clustered WordPress", 
         description="A WordPress cluster - the free and open source blogging tool and a content management system - with an nginx load balancer",
         iconUrl="http://www.wordpress.org/about/images/logos/wordpress-logo-notext-rgb.png")
-public class ClusteredWordpressApp extends ApplicationBuilder {
+public class ClusteredWordpressApp extends AbstractApplication {
     
     // TODO Currently only works on CentOS or RHEL
     
@@ -50,14 +47,14 @@ public class ClusteredWordpressApp extends ApplicationBuilder {
     private ControlledDynamicWebAppCluster cluster;
 
     @Override
-    protected void doBuild() {
+    public void init() {
         EntityTypeRegistry typeRegistry = getManagementContext().getEntityManager().getEntityTypeRegistry();
         typeRegistry.registerImplementation(NginxController.class, CustomNginxControllerImpl.class);
         
-        mysql = createChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        mysql = addChild(BasicEntitySpec.newInstance(MySqlNode.class)
                 .configure("creationScriptContents", SCRIPT));
 
-        cluster = createChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
+        cluster = addChild(BasicEntitySpec.newInstance(ControlledDynamicWebAppCluster.class)
                 .configure(ControlledDynamicWebAppCluster.INITIAL_SIZE, 2)
                 .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, BasicEntitySpec.newInstance(Wordpress.class)
                         .configure(Wordpress.DATABASE_UP, DependentConfiguration.attributeWhenReady(mysql, MySqlNode.SERVICE_UP))
@@ -77,7 +74,7 @@ public class ClusteredWordpressApp extends ApplicationBuilder {
                 .sizeRange(2, 5)
                 .build());
 
-        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(getApp());
+        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(this);
     }
 
     public static void main(String[] argv) throws Exception {
@@ -100,25 +97,21 @@ public class ClusteredWordpressApp extends ApplicationBuilder {
   
         // aled's choice:
         // Image: {id=us-east-1/ami-7d7bfc14, providerId=ami-7d7bfc14, name=RightImage_CentOS_6.3_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.0, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+        // TODO Set for only us-east-1 region, rather than all aws-ec2
         if (location==null) {
             log.info("Using default CentOS image in default location AWS us-east-1");
             brooklynProperties.put("brooklyn.jclouds.aws-ec2.image-id", "us-east-1/ami-7d7bfc14");
             location = "aws-ec2:us-east-1";
         }
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .brooklynProperties(brooklynProperties)
+                .application(EntitySpecs.appSpec(ClusteredWordpressApp.class)
+                        .displayName("Clustered wordpress app"))
                 .webconsolePort(port)
-                .launch();
+                .location(location)
+                .start();
 
-        Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
-
-        StartableApplication app = new ClusteredWordpressApp()
-                .appDisplayName("Clustered wordpress app")
-                .manage(server.getManagementContext());
-        
-        app.start(ImmutableList.of(loc));
-        
-        Entities.dumpInfo(app);
+        Entities.dumpInfo(launcher.getApplications());
     }
 }
