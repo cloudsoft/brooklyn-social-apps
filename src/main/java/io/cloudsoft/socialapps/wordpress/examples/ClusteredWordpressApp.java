@@ -117,6 +117,7 @@ public class ClusteredWordpressApp extends AbstractApplication {
    }
 
    private void customizeEntity(Entity entity, AbiquoContext context) {
+      log.info(">>> CustomizeEntity - entity: " + entity);
       try {
          ExternalNetwork externalNetwork = tryFindExternalNetwork(context);
          ExternalIp externalIp = tryFindExternalIp(externalNetwork);
@@ -129,6 +130,9 @@ public class ClusteredWordpressApp extends AbstractApplication {
                reconfigureNICsOnVirtualMachine(context, externalNetwork, nics, virtualMachine);
             }
          }
+         if(entity instanceof NginxController) {
+            ((NginxController) entity).restart();
+         }
       } finally {
          context.close();
       }
@@ -139,7 +143,7 @@ public class ClusteredWordpressApp extends AbstractApplication {
       virtualMachine.changeState(VirtualMachineState.OFF);
       monitoringService.getVirtualMachineMonitor().awaitState(VirtualMachineState.OFF, virtualMachine);
       log.info("virtualMachine(" + virtualMachine.getNameLabel() + ") is " + virtualMachine.getState());
-      AsyncTask task = virtualMachine.setNics(externalNetwork, nics);
+      AsyncTask task = virtualMachine.setNics(/*externalNetwork,*/nics);
       monitoringService.getAsyncTaskMonitor().awaitCompletion(task);
       virtualMachine.changeState(VirtualMachineState.ON);
       monitoringService.getVirtualMachineMonitor().awaitState(VirtualMachineState.ON, virtualMachine);
@@ -149,8 +153,8 @@ public class ClusteredWordpressApp extends AbstractApplication {
    private List<Ip<?, ?>> appendExternalIpToNICs(ExternalIp externalIp, VirtualMachine virtualMachine) {
       List<Ip<?, ?>> initialIps = virtualMachine.listAttachedNics();
       List<Ip<?, ?>> ips = Lists.newArrayList();
-      ips.addAll(initialIps);
       ips.add(externalIp);
+      ips.addAll(initialIps);
       return ips;
    }
 
@@ -204,5 +208,6 @@ public class ClusteredWordpressApp extends AbstractApplication {
               .locations(locations)
               .start();
 
-        Entities.dumpInfo(launcher.getApplications());    }
+        Entities.dumpInfo(launcher.getApplications());
+   }
 }
