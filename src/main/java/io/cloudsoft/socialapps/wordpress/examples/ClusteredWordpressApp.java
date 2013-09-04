@@ -1,9 +1,11 @@
 package io.cloudsoft.socialapps.wordpress.examples;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntitySpecs;
 import brooklyn.location.Location;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import com.abiquo.server.core.cloud.VirtualMachineState;
@@ -32,14 +34,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.StringConfigMap;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.mysql.MySqlNode;
+import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
+import brooklyn.entity.group.DynamicFabric;
+import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
+import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.launcher.BrooklynLauncher;
@@ -72,7 +79,7 @@ public class ClusteredWordpressApp extends AbstractApplication {
     public void init() {
         EntityTypeRegistry typeRegistry = getManagementContext().getEntityManager().getEntityTypeRegistry();
         typeRegistry.registerImplementation(NginxController.class, CustomNginxControllerImpl.class);
-        
+
         mysql = addChild(EntitySpec.create(MySqlNode.class)
                 .configure("creationScriptContents", SCRIPT));
 
@@ -89,106 +96,15 @@ public class ClusteredWordpressApp extends AbstractApplication {
                         .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, BasicWordpressApp.PASSWORD)
                         .configure(Wordpress.USE_W3_TOTAL_CACHE, true)
                         ));
-                        
+        
         cluster.getCluster().addPolicy(AutoScalerPolicy.builder()
                 .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE)
                 .metricRange(10, 25)
                 .sizeRange(2, 5)
                 .build());
-
+                
         SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(this);
     }
-
-   @Override
-   public void postStart(Collection<? extends Location> locations) {
-      for (Location loc : locations) {
-         if (loc instanceof JcloudsLocation) {
-            JcloudsLocation jcloudsLocation = ((JcloudsLocation) loc);
-            if ("abiquo".equals(jcloudsLocation.getProvider())) {
-               AbiquoContext context = ContextBuilder.newBuilder(jcloudsLocation.getProvider())
-                       .endpoint(jcloudsLocation.getEndpoint())
-                       .credentials(jcloudsLocation.getIdentity(), jcloudsLocation.getCredential())
-                       .buildView(AbiquoContext.class);
-               customizeEntity(cluster.getController(), context);
-            }
-         }
-      }
-      super.postStart(locations);
-   }
-
-   private void customizeEntity(Entity entity, AbiquoContext context) {
-      log.info(">>> CustomizeEntity - entity: " + entity);
-      try {
-         ExternalNetwork externalNetwork = tryFindExternalNetwork(context);
-         ExternalIp externalIp = tryFindExternalIp(externalNetwork);
-         Iterable<VirtualMachine> vms = context.getCloudService().listVirtualMachines();
-         JcloudsSshMachineLocation machine = (JcloudsSshMachineLocation) Iterables.getOnlyElement(entity.getLocations());
-         for (VirtualMachine virtualMachine : vms) {
-            if (virtualMachine.getNameLabel().equals(machine.getNode().getName())) {
-               List<Ip<?, ?>> nics = appendExternalIpToNICs(externalIp, virtualMachine);
-               log.info("Setting NIC " + Iterables.toString(nics) + " on virtualMachine(" + virtualMachine.getNameLabel());
-               reconfigureNICsOnVirtualMachine(context, externalNetwork, nics, virtualMachine);
-            }
-         }
-         if(entity instanceof NginxController) {
-            ((NginxController) entity).restart();
-         }
-      } finally {
-         context.close();
-      }
-   }
-
-   private void reconfigureNICsOnVirtualMachine(AbiquoContext context, ExternalNetwork externalNetwork, List<Ip<?, ?>> nics, VirtualMachine virtualMachine) {
-      MonitoringService monitoringService = context.getMonitoringService();
-      virtualMachine.changeState(VirtualMachineState.OFF);
-      monitoringService.getVirtualMachineMonitor().awaitState(VirtualMachineState.OFF, virtualMachine);
-      log.info("virtualMachine(" + virtualMachine.getNameLabel() + ") is " + virtualMachine.getState());
-      AsyncTask task = virtualMachine.setNics(/*externalNetwork,*/nics);
-      monitoringService.getAsyncTaskMonitor().awaitCompletion(task);
-      virtualMachine.changeState(VirtualMachineState.ON);
-      monitoringService.getVirtualMachineMonitor().awaitState(VirtualMachineState.ON, virtualMachine);
-      log.info("virtualMachine(" + virtualMachine.getNameLabel() + ") is " + virtualMachine.getState());
-   }
-
-   private List<Ip<?, ?>> appendExternalIpToNICs(ExternalIp externalIp, VirtualMachine virtualMachine) {
-      List<Ip<?, ?>> initialIps = virtualMachine.listAttachedNics();
-      List<Ip<?, ?>> ips = Lists.newArrayList();
-      ips.add(externalIp);
-      ips.addAll(initialIps);
-      return ips;
-   }
-
-   private ExternalIp tryFindExternalIp(ExternalNetwork externalNetwork) {
-      Optional<ExternalIp> optionalExternalIp = Optional.of(externalNetwork.listUnusedIps().get(0));
-      if(optionalExternalIp.isPresent()) {
-         return optionalExternalIp.get();
-      } else {
-         throw new IllegalStateException("Cannot find an available externalIp in external network " +
-                 externalNetwork);
-      }
-   }
-
-   private ExternalNetwork tryFindExternalNetwork(AbiquoContext context) {
-      Optional<ExternalNetwork> optionalExternalNetwork = Optional.absent();
-      Enterprise enterprise = context.getAdministrationService().getCurrentEnterprise();
-      List<Datacenter> datacenters = enterprise.listAllowedDatacenters();
-      while (!optionalExternalNetwork.isPresent() && datacenters.listIterator().hasNext()) {
-         ExternalNetwork externalNetwork = enterprise.findExternalNetwork(datacenters.listIterator().next(),
-                 new Predicate<Network<ExternalIp>>() {
-                    @Override
-                    public boolean apply(@Nullable Network<ExternalIp> input) {
-                       return input != null && input.getName().startsWith("CLPU0_IPAC");
-                    }
-                 });
-         optionalExternalNetwork = Optional.of(externalNetwork);
-      }
-      if(optionalExternalNetwork.isPresent()) {
-         return optionalExternalNetwork.get();
-      } else {
-         throw new IllegalStateException("Cannot find an available externalNetwork in any datacenters " +
-                 Iterables.toString(datacenters));
-      }
-   }
 
    public static void main(String[] argv) throws Exception {
         List<String> args = Lists.newArrayList(argv);
