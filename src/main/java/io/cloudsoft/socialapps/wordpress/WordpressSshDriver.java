@@ -65,15 +65,9 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
         List<String> commands = new LinkedList<String>();
         
         commands.add(installPackage(of("yum", "httpd", "apt", "apache2"), null));
-        commands.add(alternatives(Arrays.asList(
-                installPackage(of("yum", "php53", "apt", "php5"), null),
-                installPackage("php")), "php/php53 not available"));
-        commands.add(alternatives(Arrays.asList(
-                installPackage(of("yum", "php53-mysql", "apt", "php5-mysql"), null),
-                installPackage("php-mysql")), "php/php53 mysql not available"));
-        commands.add(alternatives(Arrays.asList(
-                installPackage(of("yum", "php53-gd", "apt", "php5-gd"), null),
-                installPackage("php-gd")), "php/php53 gd not available"));
+        commands.add(installPackage(of("apt", "php5"), "php"));
+        commands.add(installPackage(of("apt", "php5-mysql"), "php-mysql"));
+        commands.add(installPackage(of("apt", "php5-gd"), "php-gd"));
         commands.add(installPackage(of("apt", "libapache2-mod-php5"), null));
         commands.add(installPackage(of("apt", "libapache2-mod-auth-mysql"), null));
         
@@ -203,6 +197,7 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
                 body.append("cd /tmp").
                 body.append(CommonCommands.downloadUrlAs(Arrays.asList(url), filename)).
                 body.append("cd "+pluginsDir).
+                body.append(installPackage("unzip")).
                 body.append(sudo("unzip /tmp/"+filename)).
                 body.append("rm /tmp/"+filename).
                 execute();
