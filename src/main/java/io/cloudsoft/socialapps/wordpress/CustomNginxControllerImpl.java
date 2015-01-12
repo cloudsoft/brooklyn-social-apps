@@ -1,9 +1,10 @@
 package io.cloudsoft.socialapps.wordpress;
 
-import brooklyn.entity.proxy.nginx.NginxControllerImpl;
+import brooklyn.entity.proxy.nginx.NginxDefaultConfigGenerator;
 
-public class CustomNginxControllerImpl extends NginxControllerImpl {
+public class CustomNginxControllerImpl extends NginxDefaultConfigGenerator {
 
+    @Override
     protected String getCodeForServerConfig() {
         // See http://zeroturnaround.com/labs/wordpress-protips-go-with-a-clustered-approach/#!/
         // 
