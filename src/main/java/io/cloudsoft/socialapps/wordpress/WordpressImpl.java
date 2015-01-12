@@ -1,28 +1,21 @@
 package io.cloudsoft.socialapps.wordpress;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
-import org.jclouds.compute.domain.OsFamily;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.io.ByteStreams;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.entity.webapp.WebAppServiceMethods;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
@@ -30,10 +23,8 @@ import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.jclouds.JcloudsLocationConfig;
-import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
+import brooklyn.util.task.DynamicTasks;
 
 public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
 
@@ -52,14 +43,6 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
         ports.add(80);
         ports.add(443);
         return ports;
-    }
-
-    @Override
-    protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
-        PortableTemplateBuilder portableTemplateBuilder = new PortableTemplateBuilder();
-        Map flags = super.obtainProvisioningFlags(location);
-        flags.put(JcloudsLocationConfig.TEMPLATE_BUILDER.getName(), portableTemplateBuilder.osFamily(OsFamily.CENTOS).osVersionMatches("6").os64Bit(true));
-        return flags;
     }
 
     @Override
@@ -221,18 +204,25 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
      * @throws IOException
      */
     public String getAuthenticationKeys() throws IOException {
-        DefaultHttpClient httpClient = new DefaultHttpClient();
-        HttpGet httpGet = new HttpGet("https://api.wordpress.org/secret-key/1.1/salt/");
-        HttpResponse httpResponse = httpClient.execute(httpGet);
 
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ByteStreams.copy(httpResponse.getEntity().getContent(), out);
-            byte[] content = out.toByteArray();
-            return new String(content);
-        } finally {
-            EntityUtils.consume(httpResponse.getEntity());
-        }
+        return DynamicTasks.queue(SshEffectorTasks
+                .ssh("curl -G https://api.wordpress.org/secret-key/1.1/salt/"))
+                .block()
+                .getStdout();
+
+//        DefaultHttpClient httpClient = new DefaultHttpClient();
+//
+//        HttpGet httpGet = new HttpGet("https://api.wordpress.org/secret-key/1.1/salt/");
+//        HttpResponse httpResponse = httpClient.execute(httpGet);
+//
+//        try {
+//            ByteArrayOutputStream out = new ByteArrayOutputStream();
+//            ByteStreams.copy(httpResponse.getEntity().getContent(), out);
+//            byte[] content = out.toByteArray();
+//            return new String(content);
+//        } finally {
+//            EntityUtils.consume(httpResponse.getEntity());
+//        }
     }
 
     @Override

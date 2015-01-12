@@ -1,7 +1,10 @@
 package io.cloudsoft.socialapps.wordpress;
 
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.ok;
+import static brooklyn.util.ssh.BashCommands.sudo;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.String.format;
 
@@ -10,6 +13,10 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
+
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
@@ -53,6 +60,7 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
     public void install() {
 
         List<String> urls = resolver.getTargets();
+        String url = Iterables.find(urls, Predicates.contains(Pattern.compile("http")));
         String saveAs = resolver.getFilename();
 
         List<String> commands = new LinkedList<String>();
@@ -70,14 +78,16 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
                 installPackage(of("yum", "php-gd", "apt", "php5-gd"), null))));
 //                installPackage("php-gd")), "php/php53 gd not available"));
 
-        commands.add(installPackage(of("apt", "libapache2-mod-php5"), null));
-        commands.add(installPackage(of("apt", "libapache2-mod-auth-mysql"), null));
+//        commands.add(installPackage(of("apt", "libapache2-mod-php5"), null));
+//        commands.add(installPackage(of("apt", "libapache2-mod-auth-mysql"), null));
 
         // as per willomitzer comment at http://googolflex.com/?p=482 (only needed if selinux is on this box)
         commands.add(ok(sudo("setsebool -P httpd_can_network_connect 1")));
 
-        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
+        commands.add(BashCommands.INSTALL_WGET);
+        commands.add(BashCommands.INSTALL_UNZIP);
+        commands.add(format("wget %s -O %s", url , saveAs));
         commands.add("tar xzfv " + saveAs);
 
         newScript(INSTALLING).
