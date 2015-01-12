@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn.networking</groupId>
-            <artifactId>brooklyn-networking-cloudstack</artifactId>
+            <artifactId>brooklyn-networking-portforwarding</artifactId>
             <version>${advancednetworking.version}</version>
         </dependency>
         
