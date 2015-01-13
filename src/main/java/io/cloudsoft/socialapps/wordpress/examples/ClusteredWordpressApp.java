@@ -1,15 +1,13 @@
 package io.cloudsoft.socialapps.wordpress.examples;
 
+import io.cloudsoft.socialapps.wordpress.CustomNginxControllerImpl;
+import io.cloudsoft.socialapps.wordpress.Wordpress;
+
 import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
@@ -32,15 +30,18 @@ import brooklyn.location.Location;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.access.PortForwardManager;
 import brooklyn.management.ManagementContext;
+import brooklyn.networking.portforwarding.NoopPortForwarder;
 import brooklyn.networking.subnet.PortForwarder;
 import brooklyn.networking.subnet.SubnetTier;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Protocol;
-import io.cloudsoft.socialapps.wordpress.CustomNginxControllerImpl;
-import io.cloudsoft.socialapps.wordpress.Wordpress;
-import io.cloudsoft.socialapps.wordpress.networking.CustomPortForwarder;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 @Catalog(name = "Clustered WordPress",
         description = "A WordPress cluster - the free and open source blogging tool and a content management system - with an nginx load balancer",
@@ -52,9 +53,9 @@ public class ClusteredWordpressApp extends AbstractApplication {
 
     public static final Logger log = LoggerFactory.getLogger(ClusteredWordpressApp.class);
 
-    public static String DEFAULT_LOCATION_SPEC = "named:bt-net1-uk";
+    public static final String DEFAULT_LOCATION_SPEC = "softlayer:ams01";
 
-    final static String SCRIPT = "create database wordpress; " +
+    static final String SCRIPT = "create database wordpress; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'localhost'  IDENTIFIED BY 'password'; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'127.0.0.1'  IDENTIFIED BY 'password'; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'%'  IDENTIFIED BY 'password';" +
@@ -72,7 +73,7 @@ public class ClusteredWordpressApp extends AbstractApplication {
         ManagementContext managementContext = getApplication().getManagementContext();
         portForwardManager = (PortForwardManager) managementContext.getLocationRegistry().resolve("portForwardManager(scope=global)");
 
-        PortForwarder portForwarder = new CustomPortForwarder(portForwardManager);
+        PortForwarder portForwarder = new NoopPortForwarder(portForwardManager);
 
         subnetTier = addChild(EntitySpec.create(SubnetTier.class)
                 .configure(SubnetTier.PORT_FORWARDER, portForwarder)
