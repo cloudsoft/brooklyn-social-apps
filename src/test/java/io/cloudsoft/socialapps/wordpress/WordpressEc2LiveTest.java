@@ -62,14 +62,11 @@ public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
         });
     }
 
-    // Convenience for easily running just this one test from Eclipse
+    // Convenience for easily running just this one test from Eclipse.
+    // Note not all distros are supported; CentOS is.
     @Override
     @Test(groups = {"Live"})
     public void test_CentOS_6_3() throws Exception {
         super.test_CentOS_6_3();
     }
-
-    @Test(enabled = false)
-    public void testDummy() {
-    } // Convince testng IDE integration that this really does have test methods
 }

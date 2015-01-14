@@ -12,7 +12,7 @@ import brooklyn.catalog.Catalog;
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -71,7 +71,10 @@ public class ClusteredDrupalApp extends AbstractApplication {
                 .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, drupalSpec)
                 .configure(ControlledDynamicWebAppCluster.INITIAL_SIZE, 2));
         
-        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(this);
+        addEnricher(Enrichers.builder()
+                .propagating(WebAppService.ROOT_URL)
+                .from(cluster)
+                .build());
     }
 
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines

@@ -13,10 +13,6 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Pattern;
-
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;

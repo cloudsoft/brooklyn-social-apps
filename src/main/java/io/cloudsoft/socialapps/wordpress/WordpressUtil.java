@@ -3,8 +3,6 @@ package io.cloudsoft.socialapps.wordpress;
 import java.net.URI;
 
 import org.apache.http.client.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
@@ -12,8 +10,6 @@ import brooklyn.util.http.HttpToolResponse;
 import com.google.common.collect.ImmutableMap;
 
 public class WordpressUtil {
-
-    private static final Logger log = LoggerFactory.getLogger(WordpressUtil.class);
 
     /**
      * Authentication Unique Keys and Salts.

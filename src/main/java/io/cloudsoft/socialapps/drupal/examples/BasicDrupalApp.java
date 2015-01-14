@@ -45,15 +45,13 @@ public class BasicDrupalApp extends AbstractApplication {
             "TO 'drupal'@'%' IDENTIFIED BY 'password'; " +
             "FLUSH PRIVILEGES;";
 
-    private Drupal drupal;
-    private MySqlNode mySqlNode;
 
     @Override
     public void init() {
-        mySqlNode = addChild(EntitySpec.create(MySqlNode.class)
+        MySqlNode mySqlNode = addChild(EntitySpec.create(MySqlNode.class)
                 .configure(MySqlNode.CREATION_SCRIPT_CONTENTS, SCRIPT));
 
-        drupal = addChild(EntitySpec.create(Drupal.class)
+        Drupal drupal = addChild(EntitySpec.create(Drupal.class)
                 .configure(Drupal.DATABASE_UP, attributeWhenReady(mySqlNode, MySqlNode.SERVICE_UP))
                 .configure(Drupal.DATABASE_HOST, attributeWhenReady(mySqlNode, MySqlNode.HOSTNAME))
                 .configure(Drupal.DATABASE_PORT, attributeWhenReady(mySqlNode, MySqlNode.MYSQL_PORT))

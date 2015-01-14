@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
@@ -48,12 +49,21 @@ import com.google.common.collect.Lists;
         iconUrl = "http://www.wordpress.org/about/images/logos/wordpress-logo-notext-rgb.png")
 public class ClusteredWordpressApp extends AbstractApplication {
 
+    public static final Logger log = LoggerFactory.getLogger(ClusteredWordpressApp.class);
+    
+    public static final String DEFAULT_LOCATION_SPEC = "softlayer:ams01";
+
+    @CatalogConfig(label="Weblog admin e-mail")
+    public static final ConfigKey<String> WEBLOG_ADMIN_EMAIL = ConfigKeys.newConfigKeyWithDefault(
+            Wordpress.WEBLOG_ADMIN_EMAIL, "foo@example.com");
+    
+    @CatalogConfig(label="Weblog admin password")
+    public static final ConfigKey<String> WEBLOG_ADMIN_PASSWORD = ConfigKeys.newConfigKeyWithDefault(
+            Wordpress.WEBLOG_ADMIN_PASSWORD, "pa55w0rd");
+
     public static final ConfigKey<Cidr> MANAGEMENT_ACCESS_CIDR = ConfigKeys.newConfigKeyWithDefault(BrooklynAccessUtils.MANAGEMENT_ACCESS_CIDR, Cidr.UNIVERSAL);
     public static final ConfigKey<Cidr> SUBNET_ACCESS_CIDR = ConfigKeys.newConfigKeyWithDefault(BrooklynAccessUtils.MANAGEMENT_ACCESS_CIDR, new Cidr("10.44.0.0/24"));
 
-    public static final Logger log = LoggerFactory.getLogger(ClusteredWordpressApp.class);
-
-    public static final String DEFAULT_LOCATION_SPEC = "softlayer:ams01";
 
     static final String SCRIPT = "create database wordpress; " +
             "grant all privileges on wordpress.* TO 'wordpress'@'localhost'  IDENTIFIED BY 'password'; " +
@@ -96,8 +106,8 @@ public class ClusteredWordpressApp extends AbstractApplication {
                                 .configure(Wordpress.DATABASE_USER, "wordpress")
                                 .configure(Wordpress.DATABASE_PASSWORD, "password")
                                 .configure(Wordpress.WEBLOG_TITLE, "Welcome to WordPress, installed by Brooklyn!")
-                                .configure(Wordpress.WEBLOG_ADMIN_EMAIL, BasicWordpressApp.EMAIL)
-                                .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, BasicWordpressApp.PASSWORD)
+                                .configure(Wordpress.WEBLOG_ADMIN_EMAIL, getConfig(WEBLOG_ADMIN_EMAIL))
+                                .configure(Wordpress.WEBLOG_ADMIN_PASSWORD, getConfig(WEBLOG_ADMIN_PASSWORD))
                                 .configure(Wordpress.USE_W3_TOTAL_CACHE, true)
                 ));
 

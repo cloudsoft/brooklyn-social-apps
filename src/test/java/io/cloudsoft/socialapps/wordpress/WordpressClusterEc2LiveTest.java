@@ -6,13 +6,11 @@ import java.util.Arrays;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.Entity;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.test.HttpTestUtils;
@@ -27,19 +25,14 @@ public class WordpressClusterEc2LiveTest extends AbstractEc2LiveTest {
      *     proxy_set_header X-Real-IP $remote_addr;
      */
 
-    final static String SCRIPT = "create database wordpress; " +
-            "grant all privileges on wordpress.* TO 'wordpress'@'localhost'  IDENTIFIED BY 'password'; " +
-            "grant all privileges on wordpress.* TO 'wordpress'@'127.0.0.1'  IDENTIFIED BY 'password'; " +
-            "grant all privileges on wordpress.* TO 'wordpress'@'%'  IDENTIFIED BY 'password';" +
-            "flush privileges;";
+    final static String SCRIPT = WordpressEc2LiveTest.SCRIPT;
 
     private ControlledDynamicWebAppCluster cluster;
 
     @Override
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
-        // TODO Auto-generated method stub
-        //super.tearDown();
+        super.tearDown();
     }
 
     @Override
@@ -57,9 +50,6 @@ public class WordpressClusterEc2LiveTest extends AbstractEc2LiveTest {
                         .configure(Wordpress.DATABASE_PASSWORD, "password")
                         .configure(Wordpress.WEBLOG_TITLE, "my custom title")
                         .configure(Wordpress.WEBLOG_ADMIN_EMAIL, "aled.sage@gmail.com")));
-
-
-        SensorPropagatingEnricher.newInstanceListeningTo(cluster, WebAppService.ROOT_URL).addToEntityAndEmitAll(cluster);
 
         app.start(Arrays.asList(loc));
 
