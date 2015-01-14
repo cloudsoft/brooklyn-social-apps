@@ -41,8 +41,6 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
     // FIXME Haven't set up email-server, so admin e-mails are not sent
     // See debian-specific postfix setup in DrupalSshDriver.
 
-    private String expandedInstallDir;
-
     public WordpressSshDriver(WordpressImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -60,7 +58,6 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
     public void install() {
 
         List<String> urls = resolver.getTargets();
-        String url = Iterables.find(urls, Predicates.contains(Pattern.compile("http")));
         String saveAs = resolver.getFilename();
 
         List<String> commands = new LinkedList<String>();
@@ -78,16 +75,16 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
                 installPackage(of("yum", "php-gd"), null))));
 //                installPackage("php-gd")), "php/php53 gd not available"));
 
+        // TODO When adding apt support:
 //        commands.add(installPackage(of("apt", "libapache2-mod-php5"), null));
 //        commands.add(installPackage(of("apt", "libapache2-mod-auth-mysql"), null));
 
         // as per willomitzer comment at http://googolflex.com/?p=482 (only needed if selinux is on this box)
         commands.add(ok(sudo("setsebool -P httpd_can_network_connect 1")));
 
+        commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
-        commands.add(BashCommands.INSTALL_WGET);
         commands.add(BashCommands.INSTALL_UNZIP);
-        commands.add(format("wget %s -O %s", url , saveAs));
         commands.add("tar xzfv " + saveAs);
 
         newScript(INSTALLING).

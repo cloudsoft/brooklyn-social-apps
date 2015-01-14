@@ -8,7 +8,6 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -19,18 +18,22 @@ public interface Wordpress extends SoftwareProcess, WebAppService, HasShortName 
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
             "3.5.1");
 
-    public static final ConfigKey<Boolean> DATABASE_UP = ConfigKeys.newBooleanConfigKey("database.up", "", true);
+    ConfigKey<Boolean> DATABASE_UP = ConfigKeys.newBooleanConfigKey("database.up", "", true);
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "http://wordpress.org/wordpress-${version}.tar.gz");
 
     @SetFromFlag("templateConfigurationUrl")
-    ConfigKey<String> TEMPLATE_CONFIGURATION_URL = ConfigKeys.newStringConfigKey("wordpress.templateConfigurationUrl", "Template file (in freemarker format) for the wp-config.php file",
+    ConfigKey<String> TEMPLATE_CONFIGURATION_URL = ConfigKeys.newStringConfigKey(
+            "wordpress.templateConfigurationUrl", 
+            "Template file (in freemarker format) for the wp-config.php file",
             "classpath://io/cloudsoft/socialapps/wordpress/wp-config.php");
 
     @SetFromFlag("templateCustomInstallPhpUrl")
-    ConfigKey<String> TEMPLATE_CUSTOM_INSTALL_PHP_URL = ConfigKeys.newStringConfigKey("wordpress.templateCustomInstallPhp", "Template file (in freemarker format) for the custom-install.php file",
+    ConfigKey<String> TEMPLATE_CUSTOM_INSTALL_PHP_URL = ConfigKeys.newStringConfigKey(
+            "wordpress.templateCustomInstallPhp", 
+            "Template file (in freemarker format) for the custom-install.php file",
             "classpath://io/cloudsoft/socialapps/wordpress/custom-install.php");
 
     @SetFromFlag("databaseName")
@@ -53,7 +56,7 @@ public interface Wordpress extends SoftwareProcess, WebAppService, HasShortName 
 
     @SetFromFlag("weblogAdminPassword")
     // TODO would be nice if empty password causes auto-gen
-            ConfigKey<String> WEBLOG_ADMIN_PASSWORD = ConfigKeys.newStringConfigKey("wordpress.weblog.adminPassword", "Password for the weblog admin user (defaults to 'password')", "password");
+    ConfigKey<String> WEBLOG_ADMIN_PASSWORD = ConfigKeys.newStringConfigKey("wordpress.weblog.adminPassword", "Password for the weblog admin user (defaults to 'password')", "password");
 
     @SetFromFlag("isWeblogPublic")
     ConfigKey<Boolean> IS_WEBLOG_PUBLIC = ConfigKeys.newBooleanConfigKey("wordpress.weblog.ispublic", "Whether the weblog is public", true);
@@ -66,4 +69,7 @@ public interface Wordpress extends SoftwareProcess, WebAppService, HasShortName 
 
     @SetFromFlag("httpPort")
     PortAttributeSensorAndConfigKey HTTP_PORT = new PortAttributeSensorAndConfigKey(Attributes.HTTP_PORT, "80");
+    
+    @SetFromFlag("httpsPort")
+    PortAttributeSensorAndConfigKey HTTPS_PORT = new PortAttributeSensorAndConfigKey(Attributes.HTTPS_PORT, "443");
 }

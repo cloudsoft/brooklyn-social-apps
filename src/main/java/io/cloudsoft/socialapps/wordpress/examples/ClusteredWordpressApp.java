@@ -1,6 +1,6 @@
 package io.cloudsoft.socialapps.wordpress.examples;
 
-import io.cloudsoft.socialapps.wordpress.CustomNginxControllerImpl;
+import io.cloudsoft.socialapps.wordpress.CustomNginxConfigGenerator;
 import io.cloudsoft.socialapps.wordpress.Wordpress;
 
 import java.util.Collection;
@@ -63,6 +63,7 @@ public class ClusteredWordpressApp extends AbstractApplication {
 
     private MySqlNode mysql;
     private ControlledDynamicWebAppCluster cluster;
+    
     //Subnet Tier Configurations
     protected PortForwardManager portForwardManager;
     protected SubnetTier subnetTier;
@@ -86,7 +87,7 @@ public class ClusteredWordpressApp extends AbstractApplication {
 
         cluster = subnetTier.addChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(NginxController.class)
-                        .configure(NginxController.SERVER_CONF_GENERATOR, new CustomNginxControllerImpl()))
+                        .configure(NginxController.SERVER_CONF_GENERATOR, new CustomNginxConfigGenerator()))
                 .configure(ControlledDynamicWebAppCluster.INITIAL_SIZE, 2)
                 .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(Wordpress.class)
                                 .configure(Wordpress.DATABASE_UP, DependentConfiguration.attributeWhenReady(mysql, MySqlNode.SERVICE_UP))

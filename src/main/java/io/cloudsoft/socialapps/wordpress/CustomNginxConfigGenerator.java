@@ -2,7 +2,7 @@ package io.cloudsoft.socialapps.wordpress;
 
 import brooklyn.entity.proxy.nginx.NginxDefaultConfigGenerator;
 
-public class CustomNginxControllerImpl extends NginxDefaultConfigGenerator {
+public class CustomNginxConfigGenerator extends NginxDefaultConfigGenerator {
 
     @Override
     protected String getCodeForServerConfig() {

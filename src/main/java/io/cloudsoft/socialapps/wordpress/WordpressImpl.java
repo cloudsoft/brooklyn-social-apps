@@ -1,36 +1,30 @@
 package io.cloudsoft.socialapps.wordpress;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-
+import scala.deprecated;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.entity.webapp.WebAppServiceMethods;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.task.DynamicTasks;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 
 public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
 
-    protected FunctionFeed serviceUpFeed;
-    private SshFeed sshFeed;
     private static final Logger log = LoggerFactory.getLogger(WordpressImpl.class);
+    
+    private SshFeed sshFeed;
 
     @Override
     public Class getDriverInterface() {
@@ -38,32 +32,12 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
-        Collection<Integer> ports = super.getRequiredOpenPorts();
-        ports.add(80);
-        ports.add(443);
-        return ports;
-    }
-
-    @Override
     protected void connectSensors() {
         super.connectSensors();
-
+        super.connectServiceUpIsRunning();
+        
         setAttribute(Wordpress.ROOT_URL, String.format("http://%s:%s/", getAttribute(Attributes.HOSTNAME), getAttribute(HTTP_PORT)));
 
-        serviceUpFeed = FunctionFeed.builder()
-                .entity(this)
-                .poll(new FunctionPollConfig<Object, Boolean>(SERVICE_UP)
-                        .period(500, TimeUnit.MILLISECONDS)
-                        .onFailure((Functions.constant(Boolean.FALSE)))
-                        .callable(new Callable<Object>() {
-                            @Override
-                            public Object call() throws Exception {
-                                return getDriver().isRunning();
-                            }
-                        }))
-                .build();
-        
         /*
          * Gives stdout such as:
          *     Total Accesses: 2
@@ -93,13 +67,13 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
                                             return Integer.parseInt(val);
                                         }
                                     }
-                                    log.info("Total Accesses not found in server-status, returning -1 (stdout=" + stdout + ")");
+                                    log.debug("Total Accesses not found in server-status, returning -1 (stdout=" + stdout + ")");
                                     return -1;
                                 }
                             })))
                     .build();
         } else {
-            log.warn("Location(s) %s not an ssh-machine location, so not polling for request-count", getLocations());
+            log.warn("Location(s) {} not an ssh-machine location, so not polling for request-count", getLocations());
         }
 
         WebAppServiceMethods.connectWebAppServerPolicies(this);
@@ -108,8 +82,6 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
     @Override
     protected void disconnectSensors() {
         super.disconnectSensors();
-
-        if (serviceUpFeed != null) serviceUpFeed.stop();
         if (sshFeed != null) sshFeed.stop();
     }
 
@@ -202,27 +174,12 @@ public class WordpressImpl extends SoftwareProcessImpl implements Wordpress {
      * </pre>
      *
      * @throws IOException
+     * 
+     * @Deprecated since 0.3.0; see {@link WordpressUtil#getAuthenticationKeys()}
      */
+    @Deprecated // is this used by anything?
     public String getAuthenticationKeys() throws IOException {
-
-        return DynamicTasks.queue(SshEffectorTasks
-                .ssh("curl -G https://api.wordpress.org/secret-key/1.1/salt/"))
-                .block()
-                .getStdout();
-
-//        DefaultHttpClient httpClient = new DefaultHttpClient();
-//
-//        HttpGet httpGet = new HttpGet("https://api.wordpress.org/secret-key/1.1/salt/");
-//        HttpResponse httpResponse = httpClient.execute(httpGet);
-//
-//        try {
-//            ByteArrayOutputStream out = new ByteArrayOutputStream();
-//            ByteStreams.copy(httpResponse.getEntity().getContent(), out);
-//            byte[] content = out.toByteArray();
-//            return new String(content);
-//        } finally {
-//            EntityUtils.consume(httpResponse.getEntity());
-//        }
+        return WordpressUtil.getAuthenticationKeys();
     }
 
     @Override
