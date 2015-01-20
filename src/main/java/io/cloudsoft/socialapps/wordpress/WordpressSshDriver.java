@@ -65,17 +65,17 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
 
         List<String> commands = new LinkedList<String>();
 
-        commands.add(BashCommands.installPackage(of("yum", "httpd", "apt", "apache2"), null));
+        commands.add(BashCommands.installPackage(of("yum", "httpd"), null));
 
-        commands.add(alternatives(installPackage(of("yum", "php", "apt", "php5"), null)));
+        commands.add(alternatives(installPackage(of("yum", "php"), null)));
 //                installPackage("php")), "php/php53 not available"));
 
         commands.add(alternatives(Arrays.asList(
-                installPackage(of("yum", "php-mysql", "apt", "php-mysql"), null))));
+                installPackage(of("yum", "php-mysql"), null))));
 //                installPackage("php-mysql")), "php/php53 mysql not available"));
 
         commands.add(alternatives(Arrays.asList(
-                installPackage(of("yum", "php-gd", "apt", "php5-gd"), null))));
+                installPackage(of("yum", "php-gd"), null))));
 //                installPackage("php-gd")), "php/php53 gd not available"));
 
 //        commands.add(installPackage(of("apt", "libapache2-mod-php5"), null));
