@@ -18,6 +18,20 @@
     <properties>
         <advancednetworking.version>0.7.0-SNAPSHOT</advancednetworking.version>
     </properties>
+
+    <repositories>
+        <!-- enable apache snapshots repo (only for snapshots) -->
+        <repository>
+            <id>apache-snapshots</id>
+            <url>https://repository.apache.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
     
     <dependencies>
         <dependency>
