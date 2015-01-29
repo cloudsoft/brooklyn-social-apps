@@ -115,13 +115,12 @@ public class ClusteredWordpressApp extends AbstractApplication {
                 .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE)
                 .metricRange(10, 25)
                 .sizeRange(2, 5)
-                .build());
+                .buildSpec());
 
-        addEnricher(
-                Enrichers.builder()
-                        .propagating(WebAppService.ROOT_URL)
-                        .from(cluster)
-                        .build());
+        addEnricher(Enrichers.builder()
+                .propagating(WebAppService.ROOT_URL)
+                .from(cluster)
+                .build());
     }
 
     @Override
