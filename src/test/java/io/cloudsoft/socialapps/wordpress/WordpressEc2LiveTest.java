@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.BasicEntitySpec;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
@@ -25,10 +25,10 @@ public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        MySqlNode mysql = app.createAndManageChild(BasicEntitySpec.newInstance(MySqlNode.class)
+        MySqlNode mysql = app.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure("creationScriptContents", SCRIPT));
 
-        final Wordpress wordpress = app.createAndManageChild(BasicEntitySpec.newInstance(Wordpress.class)
+        final Wordpress wordpress = app.createAndManageChild(EntitySpec.create(Wordpress.class)
                 .configure(Wordpress.DATABASE_UP, DependentConfiguration.attributeWhenReady(mysql, MySqlNode.SERVICE_UP))
                 .configure(Wordpress.DATABASE_HOSTNAME, DependentConfiguration.attributeWhenReady(mysql, MySqlNode.HOSTNAME))
                 .configure(Wordpress.DATABASE_NAME, "wordpress")
@@ -41,30 +41,32 @@ public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
 
         final String url = wordpress.getAttribute(Wordpress.ROOT_URL);
         HttpTestUtils.assertContentEventuallyContainsText(url, "my custom title");
-        
+
         // Should get request count
         Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 Integer count = wordpress.getAttribute(Wordpress.REQUEST_COUNT);
-                assertTrue(count != null && count > 0, "count="+count);
-            }});
+                assertTrue(count != null && count > 0, "count=" + count);
+            }
+        });
 
         // Should get an average request count (we drive some load to stimulate this as well)
         Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
                 Double avg = wordpress.getAttribute(Wordpress.REQUESTS_PER_SECOND_IN_WINDOW);
-                assertTrue(avg != null && avg > 0, "avg="+avg);
-            }});
+                assertTrue(avg != null && avg > 0, "avg=" + avg);
+            }
+        });
     }
 
-    // Convenience for easily running just this one test from Eclipse
+    // Convenience for easily running just this one test from Eclipse.
+    // Note not all distros are supported; CentOS is.
     @Override
     @Test(groups = {"Live"})
     public void test_CentOS_6_3() throws Exception {
         super.test_CentOS_6_3();
     }
-
-    @Test(enabled=false)
-    public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
 }

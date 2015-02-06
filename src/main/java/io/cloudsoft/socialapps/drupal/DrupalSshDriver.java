@@ -1,8 +1,8 @@
 package io.cloudsoft.socialapps.drupal;
 
 
-import static brooklyn.util.ssh.CommonCommands.installPackage;
-import static brooklyn.util.ssh.CommonCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.sudo;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.String.format;
 
@@ -15,7 +15,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.ssh.CommonCommands;
+import brooklyn.util.ssh.BashCommands;
 
 public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements DrupalDriver {
 
@@ -37,8 +37,8 @@ public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements
         getLocation().copyTo(new ByteArrayInputStream(postfixConfig.getBytes()), "/tmp/postfix-main.cf");
 
         List<String> commands = new LinkedList<String>();
-        commands.add(CommonCommands.INSTALL_TAR);
-        commands.add(CommonCommands.INSTALL_WGET);
+        commands.add(BashCommands.INSTALL_TAR);
+        commands.add(BashCommands.INSTALL_WGET);
         commands.add(installPackage(of("yum", "httpd", "apt", "apache2"), null));
         commands.add(installPackage(of("yum", "php", "apt", "php5"), null));
         commands.add(installPackage(of("yum", "php-mysql", "apt", "php5-mysql"), null));
