@@ -58,22 +58,9 @@ public class WordpressSshDriver extends AbstractSoftwareProcessSshDriver impleme
 
         List<String> commands = new LinkedList<String>();
 
-        commands.add(BashCommands.installPackage(of("yum", "httpd"), null));
-
-        commands.add(alternatives(installPackage(of("yum", "php"), null)));
-//                installPackage("php")), "php/php53 not available"));
-
-        commands.add(alternatives(Arrays.asList(
-                installPackage(of("yum", "php-mysql"), null))));
-//                installPackage("php-mysql")), "php/php53 mysql not available"));
-
-        commands.add(alternatives(Arrays.asList(
-                installPackage(of("yum", "php-gd"), null))));
-//                installPackage("php-gd")), "php/php53 gd not available"));
-
-        // TODO When adding apt support:
-//        commands.add(installPackage(of("apt", "libapache2-mod-php5"), null));
-//        commands.add(installPackage(of("apt", "libapache2-mod-auth-mysql"), null));
+        commands.add(BashCommands.installPackage(of(
+                "yum", "httpd php php-mysql php-gd",
+                "apt", "apache2 php5 php5-mysql php5-gd php-mbstring libapache2-mod-php5 libapache2-mod-auth-mysql"), null));
 
         // as per willomitzer comment at http://googolflex.com/?p=482 (only needed if selinux is on this box)
         commands.add(ok(sudo("setsebool -P httpd_can_network_connect 1")));

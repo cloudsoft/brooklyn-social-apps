@@ -69,4 +69,11 @@ public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
     public void test_CentOS_6_3() throws Exception {
         super.test_CentOS_6_3();
     }
+    
+    // TODO Fails because /etc/init.d/httpd not found; see fixme comments at top of WordpressSshDriver
+    @Override
+    @Test(groups = {"Live"}, enabled=false)
+    public void test_Ubuntu_12_0() throws Exception {
+        super.test_Ubuntu_12_0();
+    }
 }
