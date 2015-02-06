@@ -41,6 +41,7 @@ import brooklyn.util.net.Protocol;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -50,8 +51,10 @@ import com.google.common.collect.Lists;
 public class ClusteredWordpressApp extends AbstractApplication {
 
     public static final Logger log = LoggerFactory.getLogger(ClusteredWordpressApp.class);
-    
+
+    // TODO Must use CentOS VMs - how best to pass in DEFAULT_LOCATION_FLAGS (currently not used)?
     public static final String DEFAULT_LOCATION_SPEC = "softlayer:ams01";
+    public static final ImmutableMap<String, String> DEFAULT_LOCATION_FLAGS = ImmutableMap.of("imageId", "CENTOS_6_64");
 
     @CatalogConfig(label="Weblog admin e-mail")
     public static final ConfigKey<String> WEBLOG_ADMIN_EMAIL = ConfigKeys.newConfigKeyWithDefault(
