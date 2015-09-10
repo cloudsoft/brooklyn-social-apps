@@ -1,12 +1,12 @@
 package io.cloudsoft.socialapps.drupal;
 
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.util.flags.SetFromFlag;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 @ImplementedBy(DrupalImpl.class)
 public interface Drupal extends SoftwareProcess, WebAppService {

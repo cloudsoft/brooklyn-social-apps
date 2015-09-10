@@ -2,6 +2,23 @@ package io.cloudsoft.socialapps.wordpress;
 
 import java.net.InetAddress;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.location.PortRanges;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.proxy.nginx.NginxController;
+import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -10,24 +27,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import brooklyn.location.basic.PortRanges;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
 
 public class WordpressMachineClusterLiveTest {
 

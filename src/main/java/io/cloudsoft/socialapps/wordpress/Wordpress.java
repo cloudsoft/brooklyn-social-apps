@@ -1,15 +1,15 @@
 package io.cloudsoft.socialapps.wordpress;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.trait.HasShortName;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.util.flags.SetFromFlag;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.objs.HasShortName;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 @ImplementedBy(WordpressImpl.class)
 public interface Wordpress extends SoftwareProcess, WebAppService, HasShortName {

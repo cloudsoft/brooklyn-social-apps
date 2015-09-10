@@ -3,7 +3,7 @@ package io.cloudsoft.socialapps.drupal;
 
 import java.util.Collection;
 
-import brooklyn.entity.basic.SoftwareProcessImpl;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 
 public class DrupalImpl extends SoftwareProcessImpl implements Drupal {
 

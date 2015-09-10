@@ -1,21 +1,20 @@
 package io.cloudsoft.socialapps.drupal;
 
-
-import static brooklyn.util.ssh.BashCommands.installPackage;
-import static brooklyn.util.ssh.BashCommands.sudo;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.String.format;
+import static org.apache.brooklyn.util.ssh.BashCommands.installPackage;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 
 import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
+import org.apache.brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.ssh.BashCommands;
 
 public class DrupalSshDriver extends AbstractSoftwareProcessSshDriver implements DrupalDriver {
 

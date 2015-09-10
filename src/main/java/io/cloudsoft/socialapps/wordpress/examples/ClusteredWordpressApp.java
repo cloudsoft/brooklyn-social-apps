@@ -1,49 +1,48 @@
 package io.cloudsoft.socialapps.wordpress.examples;
 
-import io.cloudsoft.socialapps.wordpress.CustomNginxConfigGenerator;
-import io.cloudsoft.socialapps.wordpress.Wordpress;
-
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.api.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.CatalogConfig;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityAndAttribute;
+import org.apache.brooklyn.core.entity.StartableApplication;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.core.location.access.PortForwardManager;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.enricher.stock.Enrichers;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.proxy.nginx.NginxController;
+import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
+import org.apache.brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.net.Protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.catalog.Catalog;
-import brooklyn.catalog.CatalogConfig;
-import brooklyn.config.ConfigKey;
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityAndAttribute;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxy.nginx.NginxController;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.entity.webapp.DynamicWebAppCluster;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.location.Location;
-import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.location.access.PortForwardManager;
-import brooklyn.management.ManagementContext;
-import brooklyn.networking.common.subnet.PortForwarder;
-import brooklyn.networking.portforwarding.NoopPortForwarder;
-import brooklyn.networking.subnet.SubnetTier;
-import brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.util.CommandLineUtil;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.net.Protocol;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
+import brooklyn.networking.common.subnet.PortForwarder;
+import brooklyn.networking.portforwarding.NoopPortForwarder;
+import brooklyn.networking.subnet.SubnetTier;
+import io.cloudsoft.socialapps.wordpress.CustomNginxConfigGenerator;
+import io.cloudsoft.socialapps.wordpress.Wordpress;
 
 @Catalog(name = "Clustered WordPress",
         description = "A WordPress cluster - the free and open source blogging tool and a content management system - with an nginx load balancer",

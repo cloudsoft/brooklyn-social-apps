@@ -1,6 +1,6 @@
 package io.cloudsoft.socialapps.wordpress;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface WordpressDriver extends SoftwareProcessDriver {
 }

@@ -3,17 +3,16 @@ package io.cloudsoft.socialapps.wordpress;
 
 import java.util.Arrays;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.Entity;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.Location;
-import brooklyn.test.HttpTestUtils;
 
 public class WordpressClusterEc2LiveTest extends AbstractEc2LiveTest {
 

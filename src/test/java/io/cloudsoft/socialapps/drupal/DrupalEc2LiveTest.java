@@ -1,21 +1,20 @@
 package io.cloudsoft.socialapps.drupal;
 
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
 
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.location.Location;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableMap;
 

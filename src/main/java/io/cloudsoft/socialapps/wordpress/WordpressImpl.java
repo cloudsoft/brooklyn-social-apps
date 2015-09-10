@@ -4,17 +4,16 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
+import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
+import org.apache.brooklyn.feed.ssh.SshFeed;
+import org.apache.brooklyn.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.feed.ssh.SshValueFunctions;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.webapp.WebAppServiceMethods;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.event.feed.ssh.SshValueFunctions;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

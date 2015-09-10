@@ -2,10 +2,9 @@ package io.cloudsoft.socialapps.wordpress;
 
 import java.net.URI;
 
+import org.apache.brooklyn.util.core.http.HttpTool;
+import org.apache.brooklyn.util.core.http.HttpToolResponse;
 import org.apache.http.client.HttpClient;
-
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableMap;
 

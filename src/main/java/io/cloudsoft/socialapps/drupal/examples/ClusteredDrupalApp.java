@@ -1,30 +1,30 @@
 package io.cloudsoft.socialapps.drupal.examples;
 
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
-import io.cloudsoft.socialapps.drupal.Drupal;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
 
 import java.util.List;
 
+import org.apache.brooklyn.api.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.CatalogConfig;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.StartableApplication;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.enricher.stock.Enrichers;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.util.CommandLineUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
-import brooklyn.catalog.CatalogConfig;
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigKey;
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.util.CommandLineUtil;
-
 import com.google.common.collect.Lists;
+
+import io.cloudsoft.socialapps.drupal.Drupal;
 
 /**
  * This example Application starts up a Scalable drupal environment.

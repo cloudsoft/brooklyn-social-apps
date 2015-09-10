@@ -1,6 +1,6 @@
 package io.cloudsoft.socialapps.wordpress;
 
-import brooklyn.entity.proxy.nginx.NginxDefaultConfigGenerator;
+import org.apache.brooklyn.entity.proxy.nginx.NginxDefaultConfigGenerator;
 
 public class CustomNginxConfigGenerator extends NginxDefaultConfigGenerator {
 

@@ -1,26 +1,25 @@
 package io.cloudsoft.socialapps.wordpress.examples;
 
-import io.cloudsoft.socialapps.wordpress.Wordpress;
-
 import java.util.List;
 
+import org.apache.brooklyn.api.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.CatalogConfig;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.StartableApplication;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.util.CommandLineUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
-import brooklyn.catalog.CatalogConfig;
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.util.CommandLineUtil;
-
 import com.google.common.collect.Lists;
+
+import io.cloudsoft.socialapps.wordpress.Wordpress;
 
 @Catalog(name = "Simple WordPress",
         description = "WordPress - the free and open source blogging tool and a content management system",

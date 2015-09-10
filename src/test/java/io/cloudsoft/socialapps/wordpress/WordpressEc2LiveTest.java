@@ -5,15 +5,14 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Arrays;
 
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.Location;
-import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
 
 public class WordpressEc2LiveTest extends AbstractEc2LiveTest {
 
