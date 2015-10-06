@@ -77,4 +77,28 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>sonatype-release</id>
+            <activation>
+                <property>
+                    <name>brooklyn.deployTo</name>
+                    <value>sonatype</value>
+                </property>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>sonatype-nexus-staging</id>
+                    <name>Sonatype Release Distribution Repository</name>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+                </repository>
+                <snapshotRepository>
+                    <id>sonatype-nexus-snapshots</id>
+                    <name>Sonatype Snapshot Repository</name>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
 </project>
